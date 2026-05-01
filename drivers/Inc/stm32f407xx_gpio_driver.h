@@ -10,7 +10,6 @@
 
 #define GPIO_PIN_NUM_0
 #include "stm32f407xx.h"
-#include "exti.h"
 
 /*
  * GPIO Pin Modes
@@ -21,9 +20,7 @@ typedef enum
     GPIO_MODE_OUTPUT,
     GPIO_MODE_AF,
     GPIO_MODE_ANALOG,
-	GPIO_MODE_IT_FT,
-	GPIO_MODE_IT_RT,
-	GPIO_MODE_IT_RFT,
+	GPIO_MODE_IT, //interrupt mode -> trigger handled by EXTI Config
 } GPIO_MODE_t;
 
 typedef enum
@@ -79,9 +76,8 @@ void GPIO_WriteToOutputPort(GPIO_Reg_t *pGPIOx, uint16_t Value );
 void GPIO_ToggleOutputPin(GPIO_Reg_t *pGPIOx, uint8_t PinNum);
 void GPIO_IRQConfig(uint8_t IQRNum, uint8_t IRQPriority, uint8_t EnableOrDisable);
 void GPIO_IRQHandler(uint8_t PinNum);
-
-
-
+void EXTI_Init(GPIO_Handler_t *pGPIOHandler);
+void EXTI_TriggerModeSet(GPIO_Handler_t *pGPIOHandler);
 
 
 

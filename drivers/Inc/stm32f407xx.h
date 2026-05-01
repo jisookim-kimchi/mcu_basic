@@ -143,7 +143,44 @@ typedef struct
 	volatile uint32_t	DCKCFGR;
 }RCC_Reg_t;
 
+typedef struct
+{
+	volatile uint32_t MEMRMP;		//0x00
+	volatile uint32_t PMC;			//0x04
+	volatile uint32_t EXTICR[4];	//0x08~0x14
+	        uint32_t Reserved[2];   //0x18~0x1c
+	volatile uint32_t CMPCR;		//0x20
+}SYSCFG_Reg_t;
+
+
+typedef enum
+{
+    EXTI_TRIGGER_FALLING,
+    EXTI_TRIGGER_RISING,
+    EXTI_TRIGGER_RISING_FALLING
+}EXTI_TriggerMode_t;
+
+typedef struct
+{
+    uint8_t EXTI_PinNumber;         //IMR setting
+    EXTI_TriggerMode_t EXTI_TriggerMode; //trigger mode
+    uint8_t EXTI_IRQ_Enable;        //Enable or Disable IRQ
+} EXTI_Config_t;
+
+typedef struct
+{
+    volatile uint32_t IMR;    // 0x00 - Interrupt Mask Register
+    volatile uint32_t EMR;    // 0x04 - Event Mask Register
+    volatile uint32_t RTSR;   // 0x08 - Rising Trigger Selection
+    volatile uint32_t FTSR;   // 0x0C - Falling Trigger Selection
+    volatile uint32_t SWIER;  // 0x10 - Software Interrupt Event
+    volatile uint32_t PR;     // 0x14 - Pending Register
+} EXTI_Reg_t;
+
+
+#define EXTI  ((EXTI_Reg_t*)EXTI_BASEADDR)
 #define RCC		((RCC_Reg_t*)RCC_BASEADDR)
+#define SYSCFG		((SYSCFG_Reg_t*)SYSCFG_BASEADDR)
 
 /*
  *	Clock Enable Macros for GPIO'x Peripherals
@@ -243,6 +280,19 @@ typedef struct
 #define GPIOG_REGISTER_RESET()   do{(RCC->AHB1RSTR |= (1 << 6)); (RCC->AHB1RSTR &= ~(1 << 6));} while(0)
 #define GPIOH_REGISTER_RESET()   do{(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7));} while(0)
 #define GPIOI_REGISTER_RESET()   do{(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8));} while(0)
+
+
+/*
+*  GPIO base address → SYSCFG EXTICR port code (PA=0, PB=1, ...)
+*/
+#define GPIO_BASEADDR_TO_CODE(x)  ( (x == GPIOA) ? 0 : \
+                                    (x == GPIOB) ? 1 : \
+                                    (x == GPIOC) ? 2 : \
+                                    (x == GPIOD) ? 3 : \
+                                    (x == GPIOE) ? 4 : \
+                                    (x == GPIOF) ? 5 : \
+                                    (x == GPIOG) ? 6 : \
+                                    (x == GPIOH) ? 7 : 0 )
 
 
 /*
