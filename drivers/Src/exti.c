@@ -33,3 +33,18 @@ void EXTI_TriggerModeSet(GPIO_Handler_t *pGPIOHandler)
         EXTI->RTSR |= (1 << PinNum);
     }
 }
+
+void EXTI_IMRSet(GPIO_Handler_t *pGPIOHandler)
+{
+    uint8_t PinNum = pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber;
+    uint8_t EnableOrDisable = pGPIOHandler->EXTI_Config.EXTI_IRQ_Enable;
+    if (EnableOrDisable == ENABLE)
+    {
+        EXTI->IMR |= (1 << PinNum);
+    }
+    else
+    {
+        EXTI->IMR &= ~(1 << PinNum);
+    }
+}
+
