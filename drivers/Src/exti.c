@@ -17,8 +17,19 @@ void EXTI_Init(GPIO_Handler_t *pGPIOHandler)
 void EXTI_TriggerModeSet(GPIO_Handler_t *pGPIOHandler)
 {
     EXTI_TriggerMode_t mode = pGPIOHandler->EXTI_Config.EXTI_TriggerMode;
+    uint8_t PinNum = pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber;
+
     if (mode == EXTI_TRIGGER_FALLING)
     {
-        
+        EXTI->FTSR |= (1 << PinNum);
+    }
+    else if (mode == EXTI_TRIGGER_RISING)
+    {
+        EXTI->RTSR |= (1 << PinNum);
+    }
+    else if (mode == EXTI_TRIGGER_RISING_FALLING)
+    {
+        EXTI->FTSR |= (1 << PinNum);
+        EXTI->RTSR |= (1 << PinNum);
     }
 }
