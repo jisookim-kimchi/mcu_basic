@@ -1,4 +1,5 @@
 #include "../Inc/stm32f407xx_gpio_driver.h"
+#include <stdint.h>
 
 /*
     EXTI line and Port mapping.
@@ -74,4 +75,12 @@ void NVIC_IRQPriorityConfig(uint8_t IRQNum, uint8_t IRQPriority)
     uint8_t ipr_reg_bit = IRQNum % 4;
 
     NVIC->IPR[ipr_reg_idx] |= (IRQPriority << (ipr_reg_bit * 8));
+}
+
+void PendingReg_Clear(uint8_t PinNum)
+{
+    if(EXTI->PR & (1 << PinNum))
+    {
+        EXTI->PR |= (1 << PinNum);
+    }
 }

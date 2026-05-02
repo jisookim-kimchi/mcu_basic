@@ -74,16 +74,6 @@ uint16_t GPIO_ReadFromInputPort(GPIO_Reg_t *pGPIOx);
 void GPIO_WriteToOutputPin(GPIO_Reg_t *pGPIOx, uint8_t PinNum, uint8_t Value);
 void GPIO_WriteToOutputPort(GPIO_Reg_t *pGPIOx, uint16_t Value );
 void GPIO_ToggleOutputPin(GPIO_Reg_t *pGPIOx, uint8_t PinNum);
-void GPIO_IRQConfig(uint8_t IQRNum, uint8_t IRQPriority, uint8_t EnableOrDisable);
-void GPIO_IRQHandler(uint8_t PinNum);
-void EXTI_Init(GPIO_Handler_t *pGPIOHandler);
-void EXTI_TriggerModeSet(GPIO_Handler_t *pGPIOHandler);
-
-
-
-
-
-
 
 
 #endif /* INC_STM32F407XX_GPIO_DRIVER_H_ */

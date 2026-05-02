@@ -189,17 +189,3 @@ void GPIO_ToggleOutputPin(GPIO_Reg_t *pGPIOx, uint8_t PinNum)
 		return;
 	pGPIOx->ODR ^= (1 << PinNum);
 }
-
-//
-void GPIO_IRQConfig(uint8_t IQRNum, uint8_t IRQPriority, uint8_t EnableOrDisable)
-{
-
-}
-
-//
-void GPIO_IRQHandler(uint8_t PinNum)
-{
-
-}
-
-
