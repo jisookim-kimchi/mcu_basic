@@ -177,10 +177,28 @@ typedef struct
     volatile uint32_t PR;     // 0x14 - Pending Register
 } EXTI_Reg_t;
 
+typedef struct
+{
+    volatile uint32_t ISER[8];      // 0x000 - Interrupt Set Enable
+    uint32_t RESERVED0[24];         // 0x020 - padding (gap to 0x080)
+    volatile uint32_t ICER[8];      // 0x080 - Interrupt Clear Enable
+    uint32_t RESERVED1[24];         // 0x0A0 - padding (gap to 0x100)
+    volatile uint32_t ISPR[8];      // 0x100 - Interrupt Set Pending
+    uint32_t RESERVED2[24];         // 0x120 - padding (gap to 0x180)
+    volatile uint32_t ICPR[8];      // 0x180 - Interrupt Clear Pending
+    uint32_t RESERVED3[24];         // 0x1A0 - padding (gap to 0x200)
+    volatile uint32_t IABR[8];      // 0x200 - Interrupt Active Bit
+    uint32_t RESERVED4[56];         // 0x220 - padding (gap to 0x300)
+    volatile uint32_t IPR[60];      // 0x300 - Interrupt Priority
+} NVIC_Reg_t;
 
-#define EXTI  ((EXTI_Reg_t*)EXTI_BASEADDR)
-#define RCC		((RCC_Reg_t*)RCC_BASEADDR)
-#define SYSCFG		((SYSCFG_Reg_t*)SYSCFG_BASEADDR)
+#define NVIC_BASEADDR   0xE000E100U
+
+#define NVIC    		((NVIC_Reg_t*)NVIC_BASEADDR)
+#define EXTI  			((EXTI_Reg_t*)EXTI_BASEADDR)
+#define RCC				((RCC_Reg_t*)RCC_BASEADDR)
+#define SYSCFG			((SYSCFG_Reg_t*)SYSCFG_BASEADDR)
+
 
 /*
  *	Clock Enable Macros for GPIO'x Peripherals
@@ -294,6 +312,16 @@ typedef struct
                                     (x == GPIOG) ? 6 : \
                                     (x == GPIOH) ? 7 : 0 )
 
+/*
+ * IRQ Numbers for EXTI
+ */
+#define IRQ_NO_EXTI0        6
+#define IRQ_NO_EXTI1        7
+#define IRQ_NO_EXTI2        8
+#define IRQ_NO_EXTI3        9
+#define IRQ_NO_EXTI4        10
+#define IRQ_NO_EXTI5_9      23
+#define IRQ_NO_EXTI10_15    40
 
 /*
  * config
