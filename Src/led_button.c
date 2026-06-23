@@ -12,7 +12,7 @@
  *      Author: wltn2
  */
 
-#include "stm32f407xx_gpio_driver.h"
+#include "../drivers/Inc/stm32f407xx_gpio_driver.h"
 #define BUTTON_PRESSED 1
 #define BUTTON_REALEASED 0
 

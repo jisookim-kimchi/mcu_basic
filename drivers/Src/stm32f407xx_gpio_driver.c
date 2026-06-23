@@ -80,6 +80,10 @@ void GPIO_Set(GPIO_Handler_t *pGPIOHandler)
 		pGPIOHandler->pGPIOx->MODER &= ~(0b11 << (2 * pin)); //clear
 		pGPIOHandler->pGPIOx->MODER |=  (mode << (2 * pin)); //set
     }
+	else if (mode == GPIO_MODE_IT) 
+	{
+    	pGPIOHandler->pGPIOx->MODER &= ~(0b11 << (2 * pin));
+	}
     // 2. SPEED (OSPEEDR)
     pGPIOHandler->pGPIOx->OSPEEDR &= ~(0b11 << (2 * pin));
     pGPIOHandler->pGPIOx->OSPEEDR |=  (speed << (2 * pin));
