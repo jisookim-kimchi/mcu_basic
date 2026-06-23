@@ -152,7 +152,6 @@ typedef struct
 	volatile uint32_t CMPCR;		//0x20
 }SYSCFG_Reg_t;
 
-
 typedef enum
 {
     EXTI_TRIGGER_FALLING,
@@ -192,12 +191,26 @@ typedef struct
     volatile uint32_t IPR[60];      // 0x300 - Interrupt Priority
 } NVIC_Reg_t;
 
+typedef struct
+{
+	volatile uint32_t CR1;			// 0x00 - Control Register1
+	volatile uint32_t CR2;			// 0x04 - Control Register2
+	volatile uint32_t SR;			// 0x08 - Status Register
+	volatile uint32_t DR;			// 0x0c - Data Register
+	volatile uint32_t CRCPR;		// 0x10 - CRC Polynomial Register 
+	volatile uint32_t RXCRCR;		// 0x14 - validate receive Data
+	volatile uint32_t TXCRCR;		// 0x18 - validate sent Data
+	volatile uint32_t I2SCFGR;		// 0x1C - I2S Config Register
+	volatile uint32_t SPI_I2SPR;	// 0x20 - I2S Prescaler Register
+} SPI_Reg_t;
+
 #define NVIC_BASEADDR   0xE000E100U
 
 #define NVIC    		((NVIC_Reg_t*)NVIC_BASEADDR)
 #define EXTI  			((EXTI_Reg_t*)EXTI_BASEADDR)
 #define RCC				((RCC_Reg_t*)RCC_BASEADDR)
 #define SYSCFG			((SYSCFG_Reg_t*)SYSCFG_BASEADDR)
+
 
 
 /*
