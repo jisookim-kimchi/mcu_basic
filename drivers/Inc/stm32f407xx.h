@@ -204,6 +204,16 @@ typedef struct
 	volatile uint32_t SPI_I2SPR;	// 0x20 - I2S Prescaler Register
 } SPI_Reg_t;
 
+typedef struct
+{
+				//is it master or slave?
+				//communication way
+				//clk speed
+				//data size
+				//cpol & cpha
+				//ssm software or hardware
+} SPI_Config_t;
+
 #define NVIC_BASEADDR   0xE000E100U
 
 #define NVIC    		((NVIC_Reg_t*)NVIC_BASEADDR)
