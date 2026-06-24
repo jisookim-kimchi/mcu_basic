@@ -11,7 +11,6 @@ void EXTI_Init(GPIO_Handler_t *pGPIOHandler);
 void EXTI_TriggerModeSet(GPIO_Handler_t *pGPIOHandler);
 void EXTI_IMRSet(GPIO_Handler_t *pGPIOHandler);
 
-
 void PendingReg_Clear(uint8_t PinNum);
 
 #endif /* INC_STM32F407XX_EXTI_DRIVER_H_ */
