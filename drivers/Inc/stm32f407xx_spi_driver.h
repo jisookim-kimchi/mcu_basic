@@ -55,7 +55,48 @@
 
 typedef struct
 {
-	
+	uint8_t SPI_DeviceMode;
+	uint8_t SPI_BusConfig;
+	uint8_t SPI_SclkSpeed;
+	uint8_t SPI_DFF;
+	uint8_t SPI_CPOL;
+	uint8_t SPI_CPHA;
+	uint8_t SPI_SSM;
 } SPI_Config_t;
+
+typedef struct
+{
+	SPI_Reg_t *pSPIx;
+	SPI_Config_t SPI_Config;
+} SPI_Handle_t;
+
+// @brief: Enable or disable the peripheral clock for a given SPI peripheral
+void SPI_PeriClockControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
+void SPI_Init(SPI_Handle_t *pSPIHandle);
+void SPI_DeInit(SPI_Reg_t *pSPIx);
+// @brief: (Polling method)
+void SPI_SendData(SPI_Reg_t *pSPIx, uint8_t *pTxBuffer, uint32_t Len);
+void SPI_ReceiveData(SPI_Reg_t *pSPIx, uint8_t *pRxBuffer, uint32_t Len);
+
+// @brief: interrupt
+void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
+void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
+void SPI_IRQHandling(SPI_Handle_t *pHandle);
+
+// @brief: interrupt Data Send or Receive
+uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+
+// @brief: DMA Data Send or Receive
+void SPI_DMAControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
+void SPI_SendDataDMA(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
+void SPI_ReceiveDataDMA(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+
+// @brief: NSS(Slave Select) Control
+void SPI_PeripheralControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
+void SPI_SSIConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
+void SPI_SSOEConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
+
+
 
 #endif
