@@ -53,6 +53,13 @@
 #define SPI_CPHA_1EDGE    0
 #define SPI_CPHA_2EDGE    1
 
+/*
+    SPI Communication Status
+*/
+#define SPI_READY 0
+#define SPI_BUSY_IN_RX 1
+#define SPI_BUSY_IN_TX 2
+
 typedef struct
 {
 	uint8_t SPI_DeviceMode;
