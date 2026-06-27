@@ -288,7 +288,6 @@ typedef struct
 /*
  * 	Clock Enable Macros for SPI'x
  */
-
 #define SPI1_CLOCK_ENABLE()	(RCC->APB2ENR |= (1 << 12))
 #define SPI2_CLOCK_ENABLE()	(RCC->APB1ENR |= (1 << 14))
 #define SPI3_CLOCK_ENABLE()	(RCC->APB1ENR |= (1 << 15))
@@ -360,6 +359,12 @@ typedef struct
 #define GPIOH_REGISTER_RESET()   do{(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7));} while(0)
 #define GPIOI_REGISTER_RESET()   do{(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8));} while(0)
 
+/*
+ * SPI Reset Macros
+ */
+#define SPI1_REG_RESET()   do{(RCC->APB2RSTR |= (1 << 12)); (RCC->APB2RSTR &= ~(1 << 12));} while(0)
+#define SPI2_REG_RESET()   do{(RCC->APB1RSTR |= (1 << 14)); (RCC->APB1RSTR &= ~(1 << 14));} while(0)
+#define SPI3_REG_RESET()   do{(RCC->APB1RSTR |= (1 << 15)); (RCC->APB1RSTR &= ~(1 << 15));} while(0)
 
 /*
 *  GPIO base address → SYSCFG EXTICR port code (PA=0, PB=1, ...)
