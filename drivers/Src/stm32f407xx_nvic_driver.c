@@ -3,7 +3,7 @@
 /*
 	enable or disable
     ISER = 1 : enable
-    ICER = 1 : disable 
+    ICER = 1 : disable
 */
 void NVIC_IRQConfig(uint8_t IRQNum, uint8_t EnableOrDisable)
 {

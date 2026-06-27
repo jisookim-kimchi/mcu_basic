@@ -64,10 +64,24 @@ typedef struct
 	uint8_t SPI_SSM;
 } SPI_Config_t;
 
+/*
+	@Param 3: Addr of send buffer
+	@Param 4: Addr of receive buffer
+	@Param 5: Remaining length of data to send
+	@Param 6: Remaining length of data to receive
+	@Param 7: TX state Busy or Ready
+	@Param 8: RX state Busy or Ready
+*/
 typedef struct
 {
 	SPI_Reg_t *pSPIx;
 	SPI_Config_t SPI_Config;
+	uint8_t *pTxBuffer;
+	uint8_t *pRxBuffer;
+	uint32_t TxLen;
+	uint32_t RxLen;
+	uint8_t TxState;
+	uint8_t RxState;
 } SPI_Handle_t;
 
 // @brief: Enable or disable the peripheral clock for a given SPI peripheral
@@ -84,14 +98,14 @@ void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
 void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
 void SPI_IRQHandling(SPI_Handle_t *pHandle);
 
+// @brief: interrupt Data Send or Receive
+uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+
 // @brief: NSS(Slave Select) Control
 void SPI_PeripheralControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
 void SPI_SSIConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
 void SPI_SSOEConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
-
-// @brief: interrupt Data Send or Receive
-uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
-uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
 
 // @brief: DMA Data Send or Receive
 void SPI_DMAControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);

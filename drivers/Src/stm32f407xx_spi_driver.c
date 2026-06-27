@@ -1,5 +1,6 @@
 
 #include "stm32f407xx_spi_driver.h"
+#include "stm32f407xx_nvic_driver.h"
 
 /*
     @Brief: Enable or disable the peripheral clock for a given SPI peripheral
@@ -148,10 +149,18 @@ void SPI_ReceiveData(SPI_Reg_t *pSPIx, uint8_t *pRxBuffer, uint32_t Len)
     @Brief: Enable or Disable IRQ Number
     @Param 1: IRQ Number
     @Param 2: Enable or Disable
+    @Note : Interrupt Based
 */
 void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi)
 {
-
+    if(EnOrDi == ENABLE)
+    {
+        NVIC_IRQConfig(IRQNumber, ENABLE);   
+    }
+    else
+    {
+        NVIC_IRQConfig(IRQNumber, DISABLE);
+    }
 }
 
 /*
@@ -161,14 +170,70 @@ void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi)
 */
 void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority)
 {
-    
+    NVIC_IRQPriorityConfig(IRQNumber, IRQPriority);
 }
 
 /*
     @Brief: Handle SPI Interrupt
     @Param 1: SPI Handle pointer
+    @Case 1: if TXE is set, data is sent
+    @Case 2: if RXNE is set, data is received
+    @Case 3: if ERRIE is set, data is cleared
 */
 void SPI_IRQHandling(SPI_Handle_t *pHandle)
+{
+    uint32_t sr = pHandle->pSPIx->SR;
+    
+    // Case 1: TXE is set, data is sent
+    if (sr & (1 << SPI_SR_TXE))
+    {
+        
+    }
+    // Case 2: RXNE is set, data is received
+    if (sr & (1 << SPI_SR_RXNE))
+    {
+
+    }
+    //error case...
+    if (sr & (1 << SPI_SR_CRCERR))
+    {
+
+    }
+    if (sr & (1 << SPI_SR_MODF))
+    {
+
+    }
+    if (sr & (1 << SPI_SR_OVR))
+    {
+
+    }
+    if (sr & (1 << SPI_SR_UDR))
+    {
+
+    }
+    if (sr & (1 << SPI_SR_FRL))
+    {
+
+    }
+    if (sr & (1 << SPI_SR_FRE))
+    {
+
+    }
+}
+
+/*
+    @Brief: Send Data(Interrupt)
+    @Param 1: SPI Handle pointer
+    @Param 2: Tx Buffer Pointer
+    @Param 3: Length
+    @Return: Status
+*/
+uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len)
+{
+    
+}
+
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len)
 {
     
 }
@@ -197,6 +262,7 @@ void SPI_SSIConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi)
     @Brief: Slave Select Output Enable
     @Param 1: SPI Register Base Address pointer
     @Param 2: Enable or Disable
+    @Note : Only one Slave Select 
 */
 void SPI_SSOEConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi)
 {
