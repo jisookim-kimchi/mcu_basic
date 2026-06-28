@@ -177,15 +177,26 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle) {
     }
   }
   // error case...
-  if (sr & (1 << SPI_SR_CRCERR)) {
+  if (sr & (1 << SPI_SR_CRCERR) &&
+      (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))) {
+    pHandle->pSPIx->SR &= ~(1 << SPI_SR_CRCERR);
+    // 이벤트 발생 함수!
   }
-  if (sr & (1 << SPI_SR_MODF)) {
+  if (sr & (1 << SPI_SR_MODF) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))) {
+    pHandle->pSPIx->SR &= ~(1 << SPI_SR_MODF);
+    // 이벤트 발생 함수!
   }
-  if (sr & (1 << SPI_SR_OVR)) {
+  if (sr & (1 << SPI_SR_OVR) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))) {
+    pHandle->pSPIx->SR &= ~(1 << SPI_SR_OVR);
+    // 이벤트 발생 함수!
   }
-  if (sr & (1 << SPI_SR_UDR)) {
+  if (sr & (1 << SPI_SR_UDR) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))) {
+    pHandle->pSPIx->SR &= ~(1 << SPI_SR_UDR);
+    // 이벤트 발생 함수!
   }
-  if (sr & (1 << SPI_SR_FRE)) {
+  if (sr & (1 << SPI_SR_FRE) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))) {
+    pHandle->pSPIx->SR &= ~(1 << SPI_SR_FRE);
+    // 이벤트 발생 함수!
   }
 }
 
