@@ -54,14 +54,17 @@
 #define GPIOH_BASEADDR				(AHB1_PERIPH_BASE + 0x1C00)
 #define GPIOI_BASEADDR				(AHB1_PERIPH_BASE + 0x2000)
 #define RCC_BASEADDR				0x40023800U
+#define DMA1_BASEADDR				(AHB1_PERIPH_BASE + 0x6400)
+#define DMA2_BASEADDR				(AHB1_PERIPH_BASE + 0x6800)
+
 /*
  * Base address of Peripherals at APB1_BUS
  * */
-#define I2C1_BASEADDR				(PERIPHERAL_BASE + 0x5400)
-#define I2C2_BASEADDR				(PERIPHERAL_BASE + 0x5800)
-#define I2C3_BASEADDR				(PERIPHERAL_BASE + 0x5C00)
-#define SPI2_BASEADDR				(PERIPHERAL_BASE + 0x3800)
-#define SPI3_BASEADDR				(PERIPHERAL_BASE + 0x3C00)
+#define I2C1_BASEADDR				(APB1_PERIPH_BASE + 0x5400)
+#define I2C2_BASEADDR				(APB1_PERIPH_BASE + 0x5800)
+#define I2C3_BASEADDR				(APB1_PERIPH_BASE + 0x5C00)
+#define SPI2_BASEADDR				(APB1_PERIPH_BASE + 0x3800)
+#define SPI3_BASEADDR				(APB1_PERIPH_BASE + 0x3C00)
 
 /*
  * Base address of Peripherals at APB2_BUS
@@ -204,9 +207,25 @@ typedef struct
 	volatile uint32_t SPI_I2SPR;	// 0x20 - I2S Prescaler Register
 } SPI_Reg_t;
 
-/*
- * Bit position definitions for SPI peripherals
- */
+typedef struct
+{
+	volatile uint32_t CR;
+	volatile uint32_t NDTR;
+	volatile uint32_t PAR;
+	volatile uint32_t M0AR;
+	volatile uint32_t M1AR;
+	volatile uint32_t FCR;
+} DMA_Stream_Reg_t;
+
+typedef struct
+{
+	volatile uint32_t LISR;
+	volatile uint32_t HISR;
+	volatile uint32_t LIFCR;
+	volatile uint32_t HIFCR;
+	DMA_Stream_Reg_t  stream[8];
+} DMA_Reg_t;
+
 
 /*
  * SPI_CR1
@@ -261,6 +280,8 @@ typedef struct
 #define SPI2			((SPI_Reg_t*)SPI2_BASEADDR)
 #define SPI3			((SPI_Reg_t*)SPI3_BASEADDR)
 
+#define DMA1			((DMA_Reg_t*)DMA1_BASEADDR)
+#define DMA2			((DMA_Reg_t*)DMA2_BASEADDR)
 
 
 /*
@@ -291,6 +312,13 @@ typedef struct
 #define SPI1_CLOCK_ENABLE()	(RCC->APB2ENR |= (1 << 12))
 #define SPI2_CLOCK_ENABLE()	(RCC->APB1ENR |= (1 << 14))
 #define SPI3_CLOCK_ENABLE()	(RCC->APB1ENR |= (1 << 15))
+
+/*
+	DMA Enable Macros
+*/
+#define DMA1_CLOCK_ENABLE() (RCC->AHB1ENR |= (1<<21))
+#define DMA2_CLOCK_ENABLE() (RCC->AHB1ENR |= (1<<22))
+
 
 /*
  * 	Clock Enable Macros for USART'x
@@ -336,6 +364,12 @@ typedef struct
 #define SPI3_CLOCK_DISABLE()   (RCC->APB1ENR &= ~(1 << 15))
 
 /*
+	DMA Clock Disable Macros
+*/
+#define DMA1_CLOCK_DISABLE() (RCC->AHB1ENR &= ~(1<<21))
+#define DMA2_CLOCK_DISABLE() (RCC->AHB1ENR &= ~(1<<22))
+
+/*
  * Clock Disable Macros for USART'x Peripherals
  */
 #define USART1_CLOCK_DISABLE()   (RCC->APB2ENR &= ~(1 << 4))
@@ -365,6 +399,12 @@ typedef struct
 #define SPI1_REG_RESET()   do{(RCC->APB2RSTR |= (1 << 12)); (RCC->APB2RSTR &= ~(1 << 12));} while(0)
 #define SPI2_REG_RESET()   do{(RCC->APB1RSTR |= (1 << 14)); (RCC->APB1RSTR &= ~(1 << 14));} while(0)
 #define SPI3_REG_RESET()   do{(RCC->APB1RSTR |= (1 << 15)); (RCC->APB1RSTR &= ~(1 << 15));} while(0)
+
+/*
+	DMA Reset Macros
+*/
+#define DMA1_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 21)); (RCC->AHB1RSTR &= ~(1 << 21));} while(0)
+#define DMA2_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 22)); (RCC->AHB1RSTR &= ~(1 << 22));} while(0)
 
 /*
 *  GPIO base address → SYSCFG EXTICR port code (PA=0, PB=1, ...)
@@ -398,4 +438,5 @@ typedef struct
 #define RESET			DISABLE
 #define GPIO_PIN_SET 	SET
 #define GPIO_PIN_RESET 	RESET
+
 #endif /* INC_STM32F407XX_H_ */
