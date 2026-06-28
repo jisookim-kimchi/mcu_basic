@@ -13,7 +13,7 @@
 #define DMA_CHANNEL7 7
 
 /*
-    DMA TransferMode
+    DMA Transfer Direction
 */
 #define DMA_PERIPHERAL_TO_MEMORY 0
 #define DMA_MEMORY_TO_PERIPHERAL 1
@@ -42,7 +42,6 @@
 #define DMA_ENABLE  1
 #define DMA_DISABLE 0
 
-
 /*
     DMA Memory brust transfer config
     - These bits are protected and can be written only if EN is ‘0’
@@ -64,12 +63,26 @@
 #define DMA_PBURST_INCR16   3
 
 /*
-
+	DMA FIFO level
 */
+#define DMA_FIFO_THRES_1_4      0
+#define DMA_FIFO_THRES_2_4      1
+#define DMA_FIFO_THRES_3_4      2
+#define DMA_FIFO_THRES_FULL     3
 
 typedef struct
 {
-
+	uint32_t Channel;
+    uint32_t TransferDir;
+    uint32_t PeriphInc;
+    uint32_t MemInc;
+    uint32_t PeriDataSize;
+    uint32_t MemDataSize;
+    uint32_t Priority;
+    uint32_t FIFOMode;
+    uint32_t FIFOThreshold;
+    uint32_t MemBurst;
+    uint32_t PerBurst;
 }DMA_Config_t;
 
 typedef struct
