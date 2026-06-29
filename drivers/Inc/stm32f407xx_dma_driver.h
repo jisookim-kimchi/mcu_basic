@@ -70,6 +70,11 @@
 #define DMA_FIFO_THRES_3_4      2
 #define DMA_FIFO_THRES_FULL     3
 
+/*
+    Macro get stream number
+*/
+#define GET_DMA_STREAM_NUM(pDMAx, pDMAStreamx) (uint8_t)((pDMAStreamx - (pDMAx->stream)))
+
 typedef enum
 {
     DMA_STATE_IDLE,
@@ -97,6 +102,7 @@ typedef struct
   DMA_Reg_t *pDMAx;
   DMA_Stream_Reg_t *pDMAStreamx;
   uint8_t channel;
+  //uint8_t stream_num; considering...
   uintptr_t peripheral;
   uintptr_t mem;
   uint32_t length;
