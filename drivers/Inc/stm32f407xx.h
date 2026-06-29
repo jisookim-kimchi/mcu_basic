@@ -209,20 +209,20 @@ typedef struct
 
 typedef struct
 {
-	volatile uint32_t CR;
-	volatile uint32_t NDTR;
-	volatile uint32_t PAR;
-	volatile uint32_t M0AR;
-	volatile uint32_t M1AR;
-	volatile uint32_t FCR;
+	volatile uint32_t CR;          //0x00 Control Register
+	volatile uint32_t NDTR;        //0x04 Number of Data to Transfer Register (max.16bit)
+	volatile uint32_t PAR;         //0x08 Peripheral Address Register
+	volatile uint32_t M0AR;        //0x0C Memory 0 Address Register
+	volatile uint32_t M1AR;        //0x10 Memory 1 Address Register
+	volatile uint32_t FCR;         //0x14 FIFO Control Register
 } DMA_Stream_Reg_t;
 
 typedef struct
 {
-	volatile uint32_t LISR;
-	volatile uint32_t HISR;
-	volatile uint32_t LIFCR;
-	volatile uint32_t HIFCR;
+	volatile uint32_t LISR;        //0x00 Low Interrupt Status Register
+	volatile uint32_t HISR;        //0x04 High Interrupt Status Register
+	volatile uint32_t LIFCR;       //0x08 Low Interrupt Flag Clear Register
+	volatile uint32_t HIFCR;       //0x0C High Interrupt Flag Clear Register
 	DMA_Stream_Reg_t  stream[8];
 } DMA_Reg_t;
 
@@ -318,7 +318,6 @@ typedef struct
 */
 #define DMA1_CLOCK_ENABLE() (RCC->AHB1ENR |= (1<<21))
 #define DMA2_CLOCK_ENABLE() (RCC->AHB1ENR |= (1<<22))
-
 
 /*
  * 	Clock Enable Macros for USART'x

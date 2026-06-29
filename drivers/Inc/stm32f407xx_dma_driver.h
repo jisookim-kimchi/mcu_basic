@@ -70,9 +70,16 @@
 #define DMA_FIFO_THRES_3_4      2
 #define DMA_FIFO_THRES_FULL     3
 
+typedef enum
+{
+    DMA_STATE_IDLE,
+    DMA_STATE_BUSY,
+    DMA_STATE_DONE,
+    DMA_STATE_ERROR
+} DMA_State_t;
+
 typedef struct
 {
-	uint32_t Channel;
     uint32_t TransferDir;
     uint32_t PeriphInc;
     uint32_t MemInc;
@@ -89,7 +96,12 @@ typedef struct
 {
   DMA_Reg_t *pDMAx;
   DMA_Stream_Reg_t *pDMAStreamx;
-  DMA_Config_t DMA_Config;
+  uint8_t channel;
+  uintptr_t peripheral;
+  uintptr_t mem;
+  uint32_t length;
+  DMA_Config_t config;
+  volatile DMA_State_t state;
 } DMA_Handle_t;
 
 void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi);
