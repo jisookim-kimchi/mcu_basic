@@ -229,7 +229,8 @@ typedef struct
     uint32_t PeriDataSize;
     uint32_t MemDataSize;
     uint32_t Priority;
-    uint32_t FIFOMode;
+    uint32_t CircularMode;
+    uint32_t FIFO_Or_DirectMode;
     uint32_t FIFOThreshold;
     uint32_t MemBurst;
     uint32_t PerBurst;

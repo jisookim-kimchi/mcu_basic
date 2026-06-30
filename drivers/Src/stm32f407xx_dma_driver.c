@@ -96,7 +96,6 @@ void DMA_Init(DMA_Handle_t *pDMAHandler)
     stream->M0AR = pDMAHandler->mem;
     stream->NDTR = pDMAHandler->length;
  
-    stream->CR |= DMA_STREAM_ENABLE;
     pDMAHandler->state = DMA_STATE_READY;
 }
 
