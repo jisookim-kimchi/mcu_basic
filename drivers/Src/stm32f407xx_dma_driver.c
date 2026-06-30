@@ -31,6 +31,20 @@ void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi)
     }
 }
 
+
+/*
+    DMA MAP init 
+*/
+DMA_MapStatus_t DMA_reqMapInit(DMA_Handle_t *pDMAHandler, DMA_Request_t req)
+{
+    if (pDMAHandler == NULL) return DMA_MAP_INVALID_COMBINATION;
+    if (req >= DMA_REQ_TABLE_MAX) return DMA_MAP_INVALID_COMBINATION;
+    
+
+    
+}
+
+
 /*
     DMA Initialization
     @param1 : DMA Handle pointer
@@ -38,27 +52,37 @@ void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi)
 */
 void DMA_Init(DMA_Handle_t *pDMAHandler)
 {
-    pDMAHandler->pDMAStreamx->CR &= ~(1 << 0);
-    while(pDMAHandler->pDMAStreamx->CR & (1 << 0))
+    uint32_t timeout = 100000;
+    DMA_Stream_Reg_t *stream = &pDMAHandler->pDMAx->stream[pDMAHandler->streamNum];
+    stream->CR &= ~(1 << 0);
+    while(stream->CR & (1 << 0))
     {
-        ;
+        if(--timeout == 0)
+            break;
+            //return DMA_TIMEOUT_ERROR;
     }
-    //previos flags clear
-    uint8_t stream_num = GET_DMA_STREAM_NUM(pDMAHandler->pDMAx, pDMAHandler->pDMAStreamx);
-    uint8_t bit_shift[] = {0, 6, 16, 22};
-    uint8_t shift_amount = bit_shift[stream_num % 4];
-    if (stream_num < 4)
+    const DMA_FlagMap_t *fmap = &dma_flag_map[pDMAHandler->streamNum];
+    uint32_t clear_mask = (0x3D << fmap->offset);
+    if (fmap->is_high == 0)
     {
-        pDMAHandler->pDMAx->LIFCR = (0x3D << shift_amount);
+        pDMAHandler->pDMAx->LIFCR = clear_mask;
     }
     else
     {
-        pDMAHandler->pDMAx->HIFCR = (0x3D << shift_amount);
+        pDMAHandler->pDMAx->HIFCR = clear_mask;
     }
-
+    
     // Config CR reg
-    //PAR reg,,MEM addr,,NDTR
-    // FIFO or Direct? 
+    // Channel select
+    uint32_t temp = 0;
+    temp |= pDMAHandler->channel;
+    temp |= DMA_PERIPHERAL_TO_MEMORY;
+    temp |= DMA_MINC_ENABLE;
+    temp |= DMA_MEM_DATASIZE_8BIT;
+    temp |= DMA_PERI_DATASIZE_8BIT;
+    temp |= DMA_PRIORITY_LOW;
+    temp |= DMA_CIRC_ENABLE;
+    stream->CR = temp;
     
 }
 
