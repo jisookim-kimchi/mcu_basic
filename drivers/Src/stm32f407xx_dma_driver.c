@@ -40,8 +40,14 @@ DMA_MapStatus_t DMA_reqMapInit(DMA_Handle_t *pDMAHandler, DMA_Request_t req)
     if (pDMAHandler == NULL) return DMA_MAP_INVALID_COMBINATION;
     if (req >= DMA_REQ_TABLE_MAX) return DMA_MAP_INVALID_COMBINATION;
     
-
+    const DMA_Map_t *map = &dma_map[req];
     
+    pDMAHandler->map = map;
+    pDMAHandler->streamNum = map->stream;
+    pDMAHandler->channel = map->channel;
+    pDMAHandler->pDMAx = map->pDMAx;
+    
+    return DMA_MAP_OK;
 }
 
 
@@ -71,9 +77,7 @@ void DMA_Init(DMA_Handle_t *pDMAHandler)
     {
         pDMAHandler->pDMAx->HIFCR = clear_mask;
     }
-    
     // Config CR reg
-    // Channel select
     uint32_t temp = 0;
     temp |= pDMAHandler->channel;
     temp |= DMA_PERIPHERAL_TO_MEMORY;
@@ -83,7 +87,17 @@ void DMA_Init(DMA_Handle_t *pDMAHandler)
     temp |= DMA_PRIORITY_LOW;
     temp |= DMA_CIRC_ENABLE;
     stream->CR = temp;
-    
+
+    uint32_t fcr = 0;
+    fcr |= DMA_MODE_DIRECT;
+    stream->FCR = fcr;
+
+    stream->PAR = pDMAHandler->peripheral;
+    stream->M0AR = pDMAHandler->mem;
+    stream->NDTR = pDMAHandler->length;
+ 
+    stream->CR |= DMA_STREAM_ENABLE;
+    pDMAHandler->state = DMA_STATE_READY;
 }
 
 void DMA_DeInit(DMA_Stream_Reg_t *pDCMAx)

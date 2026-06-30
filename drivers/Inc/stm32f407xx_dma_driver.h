@@ -4,8 +4,10 @@
 #include "stm32f407xx.h"
 
 // DMA MODE ENABLE
-#define DMA_DIRECT_MODE_ENABLE   (1 << 2)
-#define DMA_DIRECT_MODE_DISABLE  (0 << 2)
+#define DMA_DMDIS_BIT 2
+
+#define DMA_MODE_DIRECT (0 << DMA_DMDIS_BIT)
+#define DMA_MODE_FIFO   (1 << DMA_DMDIS_BIT)
 
 /*
 	DMA FIFO Threshold selection
@@ -112,6 +114,7 @@
 typedef enum
 {
     DMA_STATE_IDLE,
+    DMA_STATE_READY,
     DMA_STATE_BUSY,
     DMA_STATE_DONE,
     DMA_STATE_ERROR
