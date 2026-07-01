@@ -2,8 +2,7 @@
 #ifndef STM32F407XX_SPI_DRIVER_H
 #define STM32F407XX_SPI_DRIVER_H
 
-#include "stm32f407xx.h"
-
+#include "../Inc/stm32f407xx_dma_driver.h"
 /*
  * SPI Device Mode
  */
@@ -56,9 +55,6 @@
 /*
     SPI Communication Status
 */
-#define SPI_READY 0
-#define SPI_BUSY_IN_RX 1
-#define SPI_BUSY_IN_TX 2
 
 typedef struct
 {
@@ -70,6 +66,15 @@ typedef struct
 	uint8_t SPI_CPHA;
 	uint8_t SPI_SSM;
 } SPI_Config_t;
+
+typedef enum
+{
+    SPI_STATE_READY,
+    SPI_STATE_BUSY_TX,
+    SPI_STATE_BUSY_RX,
+    SPI_STATE_BUSY_TX_RX,
+    SPI_STATE_ERROR
+} SPI_State_t;
 
 /*
 	@Param 3: Addr of send buffer
@@ -87,8 +92,9 @@ typedef struct
 	uint8_t *pRxBuffer;
 	uint32_t TxLen;
 	uint32_t RxLen;
-	uint8_t TxState;
-	uint8_t RxState;
+	SPI_State_t SPI_State;
+    DMA_Handle_t *pDMA_Tx;
+    DMA_Handle_t *pDMA_Rx;
 } SPI_Handle_t;
 
 // @brief: Enable or disable the peripheral clock for a given SPI peripheral
@@ -115,9 +121,9 @@ void SPI_SSIConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
 void SPI_SSOEConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
 
 // @brief: DMA Data Send or Receive
-void SPI_DMAControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
-void SPI_SendDataDMA(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
-void SPI_ReceiveDataDMA(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+
+void SPI_DMA_TX(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
+void SPI_DMA_RX(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
 
 
 

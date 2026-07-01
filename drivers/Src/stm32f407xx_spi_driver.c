@@ -2,6 +2,7 @@
 #include "../Inc/stm32f407xx_spi_driver.h"
 #include "../Inc/stm32f407xx_nvic_driver.h"
 
+
 /*
     @Brief: Enable or disable the peripheral clock for a given SPI peripheral
     @Param 1: SPI Register Base Address pointer
@@ -203,7 +204,7 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle)
         if (pHandle->TxLen == 0)
         {
             pHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
-            pHandle->TxState = SPI_READY;
+            pHandle->SPI_State = SPI_STATE_READY;
         }
     }
     // Case 2: RXNE is set, data is received
@@ -224,7 +225,7 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle)
         if (pHandle->RxLen == 0)
         {
             pHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE);
-            pHandle->RxState = SPI_READY;
+            pHandle->SPI_State = SPI_STATE_READY;
         }
     }
     //error case...
@@ -243,7 +244,7 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle)
     }
     if (((sr & (1 << SPI_SR_OVR)) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
     {
-        if (pHandle->TxState != SPI_BUSY_IN_TX)
+        if (pHandle->SPI_State != SPI_STATE_BUSY_TX)
         {
             uint8_t temp;
             temp = pHandle->pSPIx->DR;
@@ -267,30 +268,30 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle)
 */
 uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len)
 {
-    uint8_t state = pSPIHandle->TxState;
-    if (state == SPI_BUSY_IN_TX)
+    uint8_t state = pSPIHandle->SPI_State;
+    if (state == SPI_STATE_BUSY_TX)
     {
-        return SPI_BUSY_IN_TX;
+        return SPI_STATE_BUSY_TX;
     }
     pSPIHandle->pTxBuffer = pTxBuffer;
     pSPIHandle->TxLen = Len;
-    pSPIHandle->TxState = SPI_BUSY_IN_TX;
+    pSPIHandle->SPI_State = SPI_STATE_BUSY_TX;
     pSPIHandle->pSPIx->CR2 |= (1 << SPI_CR2_TXEIE);
-    return SPI_READY;
+    return SPI_STATE_READY;
 }
 
 uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len)
 {
-    uint8_t state = pSPIHandle->RxState;
-    if (state == SPI_BUSY_IN_RX)
+    uint8_t state = pSPIHandle->SPI_State;
+    if (state == SPI_STATE_BUSY_RX)
     {
-        return SPI_BUSY_IN_RX;
+        return SPI_STATE_BUSY_RX;
     }
     pSPIHandle->pRxBuffer = pRxBuffer;
     pSPIHandle->RxLen = Len;
-    pSPIHandle->RxState = SPI_BUSY_IN_RX;
+    pSPIHandle->SPI_State = SPI_STATE_BUSY_RX;
     pSPIHandle->pSPIx->CR2 |= (1 << SPI_CR2_RXNEIE);
-    return SPI_READY;
+    return SPI_STATE_READY;
 }
 
 /*
@@ -344,3 +345,29 @@ void SPI_SSOEConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi)
         pSPIx->CR2 &= ~(1 << SPI_CR2_SSOE);
     }
 }
+
+static void SPI_DMX_TX_Enable(SPI_Reg_t *pSPIx)
+{
+    pSPIx->CR2 |= (1 << SPI_CR2_TXDMAEN);
+}
+
+static void SPI_DMX_RX_Enable(SPI_Reg_t *pSPIx)
+{
+    pSPIx->CR2 |= (1 << SPI_CR2_RXDMAEN);
+}
+
+void SPI_DMA_TX(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t len)
+{
+    DMA_Handle_t *pDMA_Tx = pSPIHandle->pDMA_Tx;
+    pDMA_Tx->mem = (uintptr_t)pTxBuffer;
+    pDMA_Tx->length = len;
+    pDMA_Tx->peripheral = (uintptr_t)&pSPIHandle->pSPIx->DR;
+
+    DMA_Init(pDMA_Tx);
+    SPI_DMX_TX_Enable(pSPIHandle->pSPIx);
+
+    DMA_Start(pDMA_Tx);
+
+}
+void SPI_DMA_RX(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+
