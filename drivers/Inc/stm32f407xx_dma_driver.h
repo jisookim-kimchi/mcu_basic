@@ -336,6 +336,6 @@ typedef struct
 
 void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi);
 int32_t DMA_Init(DMA_Handle_t *pDMAHandler);
-int32_t DMA_start(DMA_Handle_t *handler);
+int32_t DMA_Start(DMA_Handle_t *handler);
 int32_t DMA_DeInit(DMA_Handle_t *pDMAHandler);
 #endif

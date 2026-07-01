@@ -356,18 +356,72 @@ static void SPI_DMX_RX_Enable(SPI_Reg_t *pSPIx)
     pSPIx->CR2 |= (1 << SPI_CR2_RXDMAEN);
 }
 
-void SPI_DMA_TX(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t len)
+SPI_Status_t SPI_DMA_TX(SPI_Handle_t *hspi, uint8_t *txBuf, uint32_t len)
 {
-    DMA_Handle_t *pDMA_Tx = pSPIHandle->pDMA_Tx;
-    pDMA_Tx->mem = (uintptr_t)pTxBuffer;
-    pDMA_Tx->length = len;
-    pDMA_Tx->peripheral = (uintptr_t)&pSPIHandle->pSPIx->DR;
+    if (!hspi || !txBuf || len == 0)
+        return SPI_ERROR;
 
-    DMA_Init(pDMA_Tx);
-    SPI_DMX_TX_Enable(pSPIHandle->pSPIx);
+    if (hspi->SPI_State != SPI_STATE_READY)
+        return SPI_BUSY;
 
-    DMA_Start(pDMA_Tx);
+    DMA_Handle_t *dmx = hspi->pDMA_Tx;
 
+    if (!dmx)
+        return SPI_ERROR;
+
+    dmx->mem        = (uintptr_t)txBuf;
+    dmx->length     = len;
+    dmx->peripheral = (uintptr_t)&hspi->pSPIx->DR;
+    hspi->SPI_State = SPI_STATE_BUSY_TX;
+    
+    if (DMA_Init(dmx) != DMA_OK)
+    {
+        hspi->SPI_State = SPI_STATE_READY;
+        return SPI_ERROR;
+    }
+
+    SPI_DMX_TX_Enable(hspi->pSPIx);
+
+    if (DMA_Start(dmx) != DMA_OK)
+    {
+        hspi->SPI_State = SPI_STATE_READY;
+        return SPI_ERROR;
+    }
+
+    return SPI_OK;
 }
-void SPI_DMA_RX(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
 
+SPI_Status_t SPI_DMA_RX(SPI_Handle_t *hspi, uint8_t *txBuf, uint32_t len)
+{
+    if (!hspi || !txBuf || len == 0)
+        return SPI_ERROR;
+
+    if (hspi->SPI_State != SPI_STATE_READY)
+        return SPI_BUSY;
+
+    DMA_Handle_t *dmx = hspi->pDMA_Rx;
+
+    if (!dmx)
+        return SPI_ERROR;
+
+    dmx->mem        = (uintptr_t)txBuf;
+    dmx->length     = len;
+    dmx->peripheral = (uintptr_t)&hspi->pSPIx->DR;
+    hspi->SPI_State = SPI_STATE_BUSY_RX;
+    
+    if (DMA_Init(dmx) != DMA_OK)
+    {
+        hspi->SPI_State = SPI_STATE_READY;
+        return SPI_ERROR;
+    }
+
+    SPI_DMX_RX_Enable(hspi->pSPIx);
+
+    if (DMA_Start(dmx) != DMA_OK)
+    {
+        hspi->SPI_State = SPI_STATE_READY;
+        return SPI_ERROR;
+    }
+
+    return SPI_OK;
+}

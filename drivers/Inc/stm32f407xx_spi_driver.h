@@ -76,6 +76,15 @@ typedef enum
     SPI_STATE_ERROR
 } SPI_State_t;
 
+typedef enum
+{
+    SPI_OK = 0,
+    SPI_ERROR,
+    SPI_BUSY,
+    SPI_INVALID_PARAM,
+    SPI_TIMEOUT
+} SPI_Status_t;
+
 /*
 	@Param 3: Addr of send buffer
 	@Param 4: Addr of receive buffer
@@ -122,8 +131,8 @@ void SPI_SSOEConfig(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
 
 // @brief: DMA Data Send or Receive
 
-void SPI_DMA_TX(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
-void SPI_DMA_RX(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+SPI_Status_t SPI_DMA_TX(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
+SPI_Status_t SPI_DMA_RX(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
 
 
 

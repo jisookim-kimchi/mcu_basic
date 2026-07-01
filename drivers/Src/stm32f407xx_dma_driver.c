@@ -291,7 +291,7 @@ int32_t DMA_Init(DMA_Handle_t *pDMAHandler)
     @param1 : DMA Handle pointer
     @note : if hardware is already enabled, start is rejected.
 */
-int32_t DMA_start(DMA_Handle_t *handler)
+int32_t DMA_Start(DMA_Handle_t *handler)
 {
     if (handler == NULL) return DMA_NG;
     if (handler->state == DMA_STATE_BUSY || handler->state == DMA_STATE_ERROR) return DMA_NG;
