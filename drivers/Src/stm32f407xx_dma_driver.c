@@ -283,7 +283,7 @@ int32_t DMA_Init(DMA_Handle_t *pDMAHandler)
     stream->PAR = pDMAHandler->peripheral;
     stream->M0AR = pDMAHandler->mem;
     stream->NDTR = pDMAHandler->length;
-    pDMAHandler->state = DMA_STATE_READY;
+    pDMAHandler->state = DMA_STATE_IDLE;
     return DMA_OK;
 }
 
@@ -295,7 +295,7 @@ int32_t DMA_Init(DMA_Handle_t *pDMAHandler)
 int32_t DMA_start(DMA_Handle_t *handler)
 {
     if (handler == NULL) return DMA_NG;
-    if (handler->state != DMA_STATE_READY) return DMA_NG;
+    if (handler->state == DMA_STATE_BUSY) return DMA_NG;
 
     if (handler->pDMAx->stream[handler->streamNum].CR & DMA_STREAM_ENABLE_BIT)
         return DMA_NG;
