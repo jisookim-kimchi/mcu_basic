@@ -2,6 +2,28 @@
 #include "../Inc/stm32f407xx_spi_driver.h"
 #include "../Inc/stm32f407xx_nvic_driver.h"
 
+static void SPI_SetState(SPI_Handle_t *pSPIHandler, SPI_State_t state)
+{
+    if (pSPIHandler)
+    {
+        pSPIHandler->SPI_State = state;
+    }
+}
+
+void SPI_TxCompleteCallback(SPI_Handle_t *pSPIHandler)
+{
+    SPI_SetState(pSPIHandler, SPI_STATE_READY);
+}
+
+void SPI_RxCompleteCallback(SPI_Handle_t *pSPIHandler)
+{
+    SPI_SetState(pSPIHandler, SPI_STATE_READY);
+}
+
+void SPI_ErrorCallback(SPI_Handle_t *pSPIHandler)
+{
+    SPI_SetState(pSPIHandler, SPI_STATE_ERROR);
+}
 
 /*
     @Brief: Enable or disable the peripheral clock for a given SPI peripheral
@@ -47,29 +69,30 @@ void SPI_PeriClockControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi)
     @Param: SPI Handle pointer
     @Note : The caller must set SPI_Config_t before calling this
 */
-void SPI_Init(SPI_Handle_t *pSPIHandle)
+void SPI_Init(SPI_Handle_t *pSPIHandler)
 {
     uint32_t temp = 0;
-    temp |= (pSPIHandle->SPI_Config.SPI_DeviceMode << SPI_CR1_MSTR);
-    temp |= (pSPIHandle->SPI_Config.SPI_SclkSpeed << SPI_CR1_BR);
-    temp |= (pSPIHandle->SPI_Config.SPI_DFF << SPI_CR1_DFF);
-    temp |= (pSPIHandle->SPI_Config.SPI_CPOL << SPI_CR1_CPOL);
-    temp |= (pSPIHandle->SPI_Config.SPI_CPHA << SPI_CR1_CPHA);
-    temp |= (pSPIHandle->SPI_Config.SPI_SSM << SPI_CR1_SSM);
-    if (pSPIHandle->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_FD)
+    temp |= (pSPIHandler->SPI_Config.SPI_DeviceMode << SPI_CR1_MSTR);
+    temp |= (pSPIHandler->SPI_Config.SPI_SclkSpeed << SPI_CR1_BR);
+    temp |= (pSPIHandler->SPI_Config.SPI_DFF << SPI_CR1_DFF);
+    temp |= (pSPIHandler->SPI_Config.SPI_CPOL << SPI_CR1_CPOL);
+    temp |= (pSPIHandler->SPI_Config.SPI_CPHA << SPI_CR1_CPHA);
+    temp |= (pSPIHandler->SPI_Config.SPI_SSM << SPI_CR1_SSM);
+    if (pSPIHandler->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_FD)
     {
         temp &= ~(1 << SPI_CR1_BIDIMODE); // Full-duplex
     }
-    else if (pSPIHandle->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_HD)
+    else if (pSPIHandler->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_HD)
     {
         temp |= (1 << SPI_CR1_BIDIMODE); // Half-duplex
     }
-    else if (pSPIHandle->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_SIMPLEX)
+    else if (pSPIHandler->SPI_Config.SPI_BusConfig == SPI_BUS_CONFIG_SIMPLEX)
     {
         temp &= ~(1 << SPI_CR1_BIDIMODE);
         temp |= (1 << SPI_CR1_RXONLY);
     }
-    pSPIHandle->pSPIx->CR1 = temp; 
+    pSPIHandler->pSPIx->CR1 = temp;
+    SPI_SetState(pSPIHandler, SPI_STATE_READY);
 }
 
 /*
@@ -98,25 +121,27 @@ void SPI_DeInit(SPI_Reg_t *pSPIx)
     @Param 2: Tx Buffer Pointer
     @Param 3: Length
 */
-void SPI_SendData(SPI_Reg_t *pSPIx, uint8_t *pTxBuffer, uint32_t Len)
+void SPI_SendData(SPI_Handle_t *pSPIHandler, uint8_t *pTxBuffer, uint32_t Len)
 {
+    SPI_SetState(pSPIHandler, SPI_STATE_BUSY_TX);
     while (Len > 0)
     {
         // Wait until TXE is set
-        while (!(pSPIx->SR & (1 << SPI_SR_TXE)));
-        if (pSPIx->CR1 & (1 << SPI_CR1_DFF))
+        while (!(pSPIHandler->pSPIx->SR & (1 << SPI_SR_TXE)));
+        if (pSPIHandler->pSPIx->CR1 & (1 << SPI_CR1_DFF))
         {
-            pSPIx->DR = *((uint16_t*)pTxBuffer);
+            pSPIHandler->pSPIx->DR = *((uint16_t*)pTxBuffer);
             Len -= 2;
             pTxBuffer += 2;
         }
         else
         {
-            pSPIx->DR = *pTxBuffer;
+            pSPIHandler->pSPIx->DR = *pTxBuffer;
             Len--;
             pTxBuffer++;
         }
     }
+    SPI_SetState(pSPIHandler, SPI_STATE_READY);
 }
 
 /*
@@ -125,24 +150,26 @@ void SPI_SendData(SPI_Reg_t *pSPIx, uint8_t *pTxBuffer, uint32_t Len)
     @Param 2: Rx Buffer Pointer
     @Param 3: Length
 */
-void SPI_ReceiveData(SPI_Reg_t *pSPIx, uint8_t *pRxBuffer, uint32_t Len)
+void SPI_ReceiveData(SPI_Handle_t *pSPIHandler, uint8_t *pRxBuffer, uint32_t Len)
 {
+    SPI_SetState(pSPIHandler, SPI_STATE_BUSY_RX);
     while (Len > 0)
     {
-        while (!(pSPIx->SR) & (1 << SPI_SR_RXNE));
-        if (pSPIx->CR1 & (1 << SPI_CR1_DFF))
+        while (!(pSPIHandler->pSPIx->SR) & (1 << SPI_SR_RXNE));
+        if (pSPIHandler->pSPIx->CR1 & (1 << SPI_CR1_DFF))
         {
-            *((uint16_t*)pRxBuffer) = pSPIx->DR;
+            *((uint16_t*)pRxBuffer) = pSPIHandler->pSPIx->DR;
             Len -= 2;
             pRxBuffer += 2;
         }
         else
         {
-            *pRxBuffer = pSPIx->DR;
+            *pRxBuffer = pSPIHandler->pSPIx->DR;
             Len--;
             pRxBuffer++;
         }
     }
+    SPI_SetState(pSPIHandler, SPI_STATE_READY);
 }
 
 
@@ -181,81 +208,85 @@ void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority)
     @Case 2: if RXNE is set, data is received
     @Case 3: if ERRIE is set, data is cleared
 */
-void SPI_IRQHandling(SPI_Handle_t *pHandle)
+void SPI_IRQHandling(SPI_Handle_t *pSPIHandler)
 {
     //snapshot status register
-    uint32_t sr = pHandle->pSPIx->SR;
+    uint32_t sr = pSPIHandler->pSPIx->SR;
     
     // Case 1: TXE is set, data is sent
-    if (sr & (1 << SPI_SR_TXE) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_TXEIE)))
+    if (sr & (1 << SPI_SR_TXE) && (pSPIHandler->pSPIx->CR2 & (1 << SPI_CR2_TXEIE)))
     {
-        if(pHandle->SPI_Config.SPI_DFF == SPI_DFF_16BIT)
+        if(pSPIHandler->SPI_Config.SPI_DFF == SPI_DFF_16BIT)
         {
-            pHandle->pSPIx->DR = *((uint16_t*)pHandle->pTxBuffer);
-            pHandle->TxLen -= 2;
-            pHandle->pTxBuffer += 2;
+            pSPIHandler->pSPIx->DR = *((uint16_t*)pSPIHandler->pTxBuffer);
+            pSPIHandler->TxLen -= 2;
+            pSPIHandler->pTxBuffer += 2;
         }
-        else if (pHandle->SPI_Config.SPI_DFF == SPI_DFF_8BIT)
+        else if (pSPIHandler->SPI_Config.SPI_DFF == SPI_DFF_8BIT)
         {
-            pHandle->pSPIx->DR = *pHandle->pTxBuffer;
-            pHandle->TxLen--;
-            pHandle->pTxBuffer++;
+            pSPIHandler->pSPIx->DR = *pSPIHandler->pTxBuffer;
+            pSPIHandler->TxLen--;
+            pSPIHandler->pTxBuffer++;
         }
-        if (pHandle->TxLen == 0)
+        if (pSPIHandler->TxLen == 0)
         {
-            pHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
-            pHandle->SPI_State = SPI_STATE_READY;
+            pSPIHandler->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
+            SPI_TxCompleteCallback(pSPIHandler);
         }
     }
     // Case 2: RXNE is set, data is received
-    if (sr & (1 << SPI_SR_RXNE) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_RXNEIE)))
+    if (sr & (1 << SPI_SR_RXNE) && (pSPIHandler->pSPIx->CR2 & (1 << SPI_CR2_RXNEIE)))
     {
-        if(pHandle->SPI_Config.SPI_DFF == SPI_DFF_16BIT)
+        if(pSPIHandler->SPI_Config.SPI_DFF == SPI_DFF_16BIT)
         {
-            *((uint16_t*)pHandle->pRxBuffer) = pHandle->pSPIx->DR;
-            pHandle->RxLen -= 2;
-            pHandle->pRxBuffer += 2;
+            *((uint16_t*)pSPIHandler->pRxBuffer) = pSPIHandler->pSPIx->DR;
+            pSPIHandler->RxLen -= 2;
+            pSPIHandler->pRxBuffer += 2;
         }
-        else if (pHandle->SPI_Config.SPI_DFF == SPI_DFF_8BIT)
+        else if (pSPIHandler->SPI_Config.SPI_DFF == SPI_DFF_8BIT)
         {
-            *pHandle->pRxBuffer = pHandle->pSPIx->DR;
-            pHandle->RxLen--;
-            pHandle->pRxBuffer++;
+            *pSPIHandler->pRxBuffer = pSPIHandler->pSPIx->DR;
+            pSPIHandler->RxLen--;
+            pSPIHandler->pRxBuffer++;
         }
-        if (pHandle->RxLen == 0)
+        if (pSPIHandler->RxLen == 0)
         {
-            pHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE);
-            pHandle->SPI_State = SPI_STATE_READY;
+            pSPIHandler->pSPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE);
+            SPI_RxCompleteCallback(pSPIHandler);
         }
     }
     //error case...
-    if (((sr & (1 << SPI_SR_CRCERR)) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
+    if (((sr & (1 << SPI_SR_CRCERR)) && (pSPIHandler->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
     {
-        pHandle->pSPIx->SR &= ~(1 << SPI_SR_CRCERR);
         //event call
+        pSPIHandler->pSPIx->SR &= ~(1 << SPI_SR_CRCERR);
+        SPI_ErrorCallback(pSPIHandler);  
     }
     //Master Mode Fault
     //im a Master but, someone call me as Slave
-    if (((sr & (1 << SPI_SR_MODF)) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
+    if (((sr & (1 << SPI_SR_MODF)) && (pSPIHandler->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
     {
-        uint32_t temp = pHandle->pSPIx->CR1;
-        pHandle->pSPIx->CR1 = temp;
         //event call
+        uint32_t temp = pSPIHandler->pSPIx->CR1;
+        pSPIHandler->pSPIx->CR1 = temp;
+        SPI_ErrorCallback(pSPIHandler);  
     }
-    if (((sr & (1 << SPI_SR_OVR)) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
+    if (((sr & (1 << SPI_SR_OVR)) && (pSPIHandler->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
     {
-        if (pHandle->SPI_State != SPI_STATE_BUSY_TX)
+        //event call
+        if (pSPIHandler->SPI_State != SPI_STATE_BUSY_TX)
         {
             uint8_t temp;
-            temp = pHandle->pSPIx->DR;
-            temp = pHandle->pSPIx->SR;
+            temp = pSPIHandler->pSPIx->DR;
+            temp = pSPIHandler->pSPIx->SR;
             (void)temp;
         }
-        //event call
+        SPI_ErrorCallback(pSPIHandler); 
     }
-    if (((sr & (1 << SPI_SR_FRE)) && (pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
+    if (((sr & (1 << SPI_SR_FRE)) && (pSPIHandler->pSPIx->CR2 & (1 << SPI_CR2_ERRIE))))
     {
         //event call
+        SPI_ErrorCallback(pSPIHandler); 
     }
 }
 
@@ -266,31 +297,31 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle)
     @Param 3: Length
     @Return: Status
 */
-uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len)
+uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandler, uint8_t *pTxBuffer, uint32_t Len)
 {
-    uint8_t state = pSPIHandle->SPI_State;
+    uint8_t state = pSPIHandler->SPI_State;
     if (state == SPI_STATE_BUSY_TX)
     {
         return SPI_STATE_BUSY_TX;
     }
-    pSPIHandle->pTxBuffer = pTxBuffer;
-    pSPIHandle->TxLen = Len;
-    pSPIHandle->SPI_State = SPI_STATE_BUSY_TX;
-    pSPIHandle->pSPIx->CR2 |= (1 << SPI_CR2_TXEIE);
+    pSPIHandler->pTxBuffer = pTxBuffer;
+    pSPIHandler->TxLen = Len;
+    SPI_SetState(pSPIHandler, SPI_STATE_BUSY_TX);
+    pSPIHandler->pSPIx->CR2 |= (1 << SPI_CR2_TXEIE);
     return SPI_STATE_READY;
 }
 
-uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len)
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandler, uint8_t *pRxBuffer, uint32_t Len)
 {
-    uint8_t state = pSPIHandle->SPI_State;
+    uint8_t state = pSPIHandler->SPI_State;
     if (state == SPI_STATE_BUSY_RX)
     {
         return SPI_STATE_BUSY_RX;
     }
-    pSPIHandle->pRxBuffer = pRxBuffer;
-    pSPIHandle->RxLen = Len;
-    pSPIHandle->SPI_State = SPI_STATE_BUSY_RX;
-    pSPIHandle->pSPIx->CR2 |= (1 << SPI_CR2_RXNEIE);
+    pSPIHandler->pRxBuffer = pRxBuffer;
+    pSPIHandler->RxLen = Len;
+    SPI_SetState(pSPIHandler, SPI_STATE_BUSY_RX);
+    pSPIHandler->pSPIx->CR2 |= (1 << SPI_CR2_RXNEIE);
     return SPI_STATE_READY;
 }
 
@@ -356,70 +387,70 @@ static void SPI_DMX_RX_Enable(SPI_Reg_t *pSPIx)
     pSPIx->CR2 |= (1 << SPI_CR2_RXDMAEN);
 }
 
-SPI_Status_t SPI_DMA_TX(SPI_Handle_t *hspi, uint8_t *txBuf, uint32_t len)
+SPI_Status_t SPI_DMA_TX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
 {
-    if (!hspi || !txBuf || len == 0)
+    if (!pSPIHandler || !txBuf || len == 0)
         return SPI_ERROR;
 
-    if (hspi->SPI_State != SPI_STATE_READY)
+    if (pSPIHandler->SPI_State != SPI_STATE_READY)
         return SPI_BUSY;
 
-    DMA_Handle_t *dmx = hspi->pDMA_Tx;
+    DMA_Handle_t *dmx = pSPIHandler->pDMA_Tx;
 
     if (!dmx)
         return SPI_ERROR;
 
     dmx->mem        = (uintptr_t)txBuf;
     dmx->length     = len;
-    dmx->peripheral = (uintptr_t)&hspi->pSPIx->DR;
-    hspi->SPI_State = SPI_STATE_BUSY_TX;
+    dmx->peripheral = (uintptr_t)&pSPIHandler->pSPIx->DR;
+    SPI_SetState(pSPIHandler, SPI_STATE_BUSY_TX);
     
     if (DMA_Init(dmx) != DMA_OK)
     {
-        hspi->SPI_State = SPI_STATE_READY;
+        SPI_SetState(pSPIHandler, SPI_STATE_READY);
         return SPI_ERROR;
     }
 
-    SPI_DMX_TX_Enable(hspi->pSPIx);
+    SPI_DMX_TX_Enable(pSPIHandler->pSPIx);
 
     if (DMA_Start(dmx) != DMA_OK)
     {
-        hspi->SPI_State = SPI_STATE_READY;
+        SPI_SetState(pSPIHandler, SPI_STATE_READY);
         return SPI_ERROR;
     }
 
     return SPI_OK;
 }
 
-SPI_Status_t SPI_DMA_RX(SPI_Handle_t *hspi, uint8_t *txBuf, uint32_t len)
+SPI_Status_t SPI_DMA_RX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
 {
-    if (!hspi || !txBuf || len == 0)
+    if (!pSPIHandler || !txBuf || len == 0)
         return SPI_ERROR;
 
-    if (hspi->SPI_State != SPI_STATE_READY)
+    if (pSPIHandler->SPI_State != SPI_STATE_READY)
         return SPI_BUSY;
 
-    DMA_Handle_t *dmx = hspi->pDMA_Rx;
+    DMA_Handle_t *dmx = pSPIHandler->pDMA_Rx;
 
     if (!dmx)
         return SPI_ERROR;
 
     dmx->mem        = (uintptr_t)txBuf;
     dmx->length     = len;
-    dmx->peripheral = (uintptr_t)&hspi->pSPIx->DR;
-    hspi->SPI_State = SPI_STATE_BUSY_RX;
+    dmx->peripheral = (uintptr_t)&pSPIHandler->pSPIx->DR;
+    SPI_SetState(pSPIHandler, SPI_STATE_BUSY_RX);
     
     if (DMA_Init(dmx) != DMA_OK)
     {
-        hspi->SPI_State = SPI_STATE_READY;
+        SPI_SetState(pSPIHandler, SPI_STATE_READY);
         return SPI_ERROR;
     }
 
-    SPI_DMX_RX_Enable(hspi->pSPIx);
+    SPI_DMX_RX_Enable(pSPIHandler->pSPIx);
 
     if (DMA_Start(dmx) != DMA_OK)
     {
-        hspi->SPI_State = SPI_STATE_READY;
+        SPI_SetState(pSPIHandler, SPI_STATE_READY);
         return SPI_ERROR;
     }
 

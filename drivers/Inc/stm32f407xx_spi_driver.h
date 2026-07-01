@@ -112,8 +112,8 @@ void SPI_Init(SPI_Handle_t *pSPIHandle);
 void SPI_DeInit(SPI_Reg_t *pSPIx);
 
 // @brief: (Polling method)
-void SPI_SendData(SPI_Reg_t *pSPIx, uint8_t *pTxBuffer, uint32_t Len);
-void SPI_ReceiveData(SPI_Reg_t *pSPIx, uint8_t *pRxBuffer, uint32_t Len);
+void SPI_SendData(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
+void SPI_ReceiveData(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
 
 // @brief: interrupt
 void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
@@ -123,6 +123,11 @@ void SPI_IRQHandling(SPI_Handle_t *pHandle);
 // @brief: interrupt Data Send or Receive
 uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t Len);
 uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t Len);
+
+// @brief: callbacks
+void SPI_TxCompleteCallback(SPI_Handle_t *pSPIHandle);
+void SPI_RxCompleteCallback(SPI_Handle_t *pSPIHandle);
+void SPI_ErrorCallback(SPI_Handle_t *pSPIHandle);
 
 // @brief: NSS(Slave Select) Control
 void SPI_PeripheralControl(SPI_Reg_t *pSPIx, uint8_t EnOrDi);
