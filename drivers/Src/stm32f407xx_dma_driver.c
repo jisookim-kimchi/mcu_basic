@@ -31,7 +31,6 @@ void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi)
     }
 }
 
-
 /*
     DMA MAP init 
 */
@@ -54,7 +53,7 @@ static int32_t DMA_waitDisable(DMA_Handle_t *handler)
     uint32_t timeout = 100000;
 
     DMA_Stream_Reg_t *stream = &handler->pDMAx->stream[handler->streamNum];
-    while (stream->CR & (1 << 0))
+    while (stream->CR & (DMA_STREAM_ENABLE_BIT))
     {
         if (--timeout == 0)
             return DMA_TIMEOUT_ERROR;
@@ -295,7 +294,7 @@ int32_t DMA_Init(DMA_Handle_t *pDMAHandler)
 int32_t DMA_start(DMA_Handle_t *handler)
 {
     if (handler == NULL) return DMA_NG;
-    if (handler->state == DMA_STATE_BUSY) return DMA_NG;
+    if (handler->state == DMA_STATE_BUSY || handler->state == DMA_STATE_ERROR) return DMA_NG;
 
     if (handler->pDMAx->stream[handler->streamNum].CR & DMA_STREAM_ENABLE_BIT)
         return DMA_NG;
@@ -305,7 +304,28 @@ int32_t DMA_start(DMA_Handle_t *handler)
     return DMA_OK;
 }
 
-void DMA_DeInit(DMA_Stream_Reg_t *pDCMAx)
+/*
+    @brief : DMA De Init
+    @note : We may use again same Channel, Stream, DMAx after DeInit...
+*/
+int32_t DMA_DeInit(DMA_Handle_t *handler)
 {
-
+    if (handler == NULL || handler->pDMAx == NULL) return DMA_NG;
+    handler->state = DMA_STATE_BUSY;
+    DMA_Stream_Reg_t *stream = &handler->pDMAx->stream[handler->streamNum];
+    stream->CR &= ~DMA_STREAM_ENABLE_BIT;
+    if (DMA_waitDisable(handler) != DMA_OK)
+        return DMA_NG;
+    DMA_clearFlags(handler);
+    stream->CR = 0;
+    stream->NDTR = 0;
+    stream->M0AR = 0;
+    stream->M1AR = 0;
+    stream->PAR = 0;
+    stream->FCR = 0;
+    handler->peripheral = 0;
+    handler->mem = 0;
+    handler->length = 0;
+    handler->state = DMA_STATE_RESET;
+    return DMA_OK;
 }

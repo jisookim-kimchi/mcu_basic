@@ -22,8 +22,8 @@ typedef enum
 {
     DMA_STATE_RESET = 0,
     DMA_STATE_IDLE,
-    DMA_STATE_BUSY,
     DMA_STATE_COMPLETE,
+    DMA_STATE_BUSY,
     DMA_STATE_ERROR
 } DMA_State_t;
 
@@ -336,5 +336,5 @@ typedef struct
 
 void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi);
 int32_t DMA_Init(DMA_Handle_t *pDMAHandler);
-void DMA_DeInit(DMA_Stream_Reg_t *pDMAx);
+int32_t DMA_DeInit(DMA_Handle_t *pDMAHandler);
 #endif
