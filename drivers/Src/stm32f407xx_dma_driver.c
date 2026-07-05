@@ -170,6 +170,52 @@ static int32_t DMA_CR_MemDataSizeConfig(DMA_Handle_t *handler, uint32_t *temp)
     return DMA_OK;
 }
 
+static int32_t DMA_CR_MemBurstConfig(DMA_Handle_t *handler, uint32_t *temp)
+{
+    if (handler == NULL) return DMA_CONFIG_INVALID_PARAM;
+    switch(handler->config.MemBurst)
+    {
+        case DMA_MBURST_SINGLE:
+            *temp |= DMA_MBURST_SINGLE_BIT; 
+            break;
+        case DMA_MBURST_INCR4:
+            *temp |= DMA_MBURST_INCR4_BIT;  
+            break;
+        case DMA_MBURST_INCR8:
+            *temp |= DMA_MBURST_INCR8_BIT;  
+            break;
+        case DMA_MBURST_INCR16:
+            *temp |= DMA_MBURST_INCR16_BIT; 
+            break;
+        default:
+            return -DMA_CONFIG_INVALID_PARAM;
+    }
+    return DMA_OK;
+}
+
+static int32_t DMA_CR_PeriBurstConfig(DMA_Handle_t *handler, uint32_t *temp)
+{
+    if (handler == NULL) return DMA_CONFIG_INVALID_PARAM;
+    switch(handler->config.PerBurst)
+    {
+        case DMA_PBURST_SINGLE:
+            *temp |= DMA_PBURST_SINGLE_BIT;
+            break;
+        case DMA_PBURST_INCR4:
+            *temp |= DMA_PBURST_INCR4_BIT;
+            break;
+        case DMA_PBURST_INCR8:
+            *temp |= DMA_PBURST_INCR8_BIT;
+            break;
+        case DMA_PBURST_INCR16:
+            *temp |= DMA_PBURST_INCR16_BIT;
+            break;
+        default:
+            return -DMA_CONFIG_INVALID_PARAM;
+    }
+    return DMA_OK;
+}
+
 static int32_t DMA_CR_PriorityConfig(DMA_Handle_t *handler, uint32_t *temp)
 {
     if (handler == NULL) return DMA_CONFIG_INVALID_PARAM;
@@ -272,6 +318,13 @@ int32_t DMA_Init(DMA_Handle_t *pDMAHandler)
         return DMA_NG;
     if (DMA_CR_CircularModeConfig(pDMAHandler, &temp) != DMA_OK)
         return DMA_NG;
+    if (pDMAHandler->config.FIFO_Or_DirectMode == DMA_MODE_FIFO)
+    {
+        if (DMA_CR_MemBurstConfig(pDMAHandler, &temp) != DMA_OK)
+            return DMA_NG;
+        if (DMA_CR_PeriBurstConfig(pDMAHandler, &temp) != DMA_OK)
+            return DMA_NG;
+    }
     DMA_Stream_Reg_t *stream = &pDMAHandler->pDMAx->stream[pDMAHandler->streamNum];
     temp &= ~DMA_STREAM_ENABLE_BIT;
     stream->CR = temp;
@@ -328,4 +381,68 @@ int32_t DMA_DeInit(DMA_Handle_t *handler)
     handler->length = 0;
     handler->state = DMA_STATE_RESET;
     return DMA_OK;
+}
+
+/*
+    @brief : load Callback functions..
+*/
+void DMA_loadCallback(DMA_Handle_t *pDMAHandler, DMA_Callback_fn pCallback)
+{
+    if (pDMAHandler == NULL || pCallback == NULL)
+        return;
+    pDMAHandler->pCallback = pCallback;
+}
+
+void DMA_IRQHandling(DMA_Handle_t *pDMAHandler)
+{
+    if (pDMAHandler == NULL || pDMAHandler->pDMAx == NULL) return;
+
+    const DMA_FlagMap_t *flagmap = &dma_flag_map[pDMAHandler->streamNum];
+    DMA_Stream_Reg_t *stream = &pDMAHandler->pDMAx->stream[pDMAHandler->streamNum];
+    uint32_t status = 0;
+    if (flagmap->is_high)
+        status = (pDMAHandler->pDMAx->HIFCR >> flagmap->offset) & 0x3F;
+    else
+        status = (pDMAHandler->pDMAx->LIFCR >> flagmap->offset) & 0x3F;
+
+    //TCIF -> TCIE
+    if ((status & (1 << 5)) && (stream->CR & (1 << 4)))
+    {
+        if (flagmap->is_high)
+            pDMAHandler->pDMAx->HIFCR = (1 << (5 + flagmap->offset));
+        else
+            pDMAHandler->pDMAx->LIFCR = (1 << (5 + flagmap->offset));
+        if (pDMAHandler->pCallback != NULL)
+            pDMAHandler->pCallback(pDMAHandler, DMA_EVENT_TC);
+    }
+    // HTIF -> HTIE
+    if ((status & (1 << 4)) && (stream->CR & (1 << 3)))
+    {
+        if (flagmap->is_high)
+            pDMAHandler->pDMAx->HIFCR = (1 << (4 + flagmap->offset));
+        else
+            pDMAHandler->pDMAx->LIFCR = (1 << (4 + flagmap->offset));
+        if (pDMAHandler->pCallback != NULL)
+            pDMAHandler->pCallback(pDMAHandler, DMA_EVENT_HTC);
+    }
+    // TEIF -> TEIE
+    if ((status & (1 << 3)) && (stream->CR & (1 << 2)))
+    {
+        if (flagmap->is_high)
+            pDMAHandler->pDMAx->HIFCR = (1 << (3 + flagmap->offset));
+        else
+            pDMAHandler->pDMAx->LIFCR = (1 << (3 + flagmap->offset));
+        if (pDMAHandler->pCallback != NULL)
+            pDMAHandler->pCallback(pDMAHandler, DMA_EVENT_TE);
+    }
+    // FEIF -> FEIE
+    if ((status & (1 << 0)) && (stream->FCR & (1 << 7)))
+    {
+        if (flagmap->is_high)
+            pDMAHandler->pDMAx->HIFCR = (1 << (0 + flagmap->offset));
+        else
+            pDMAHandler->pDMAx->LIFCR = (1 << (0 + flagmap->offset));
+        if (pDMAHandler->pCallback != NULL)
+            pDMAHandler->pCallback(pDMAHandler, DMA_EVENT_FE);
+    }
 }

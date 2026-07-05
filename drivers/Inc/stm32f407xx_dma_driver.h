@@ -230,9 +230,22 @@ typedef enum
 typedef struct
 {
     uint8_t offset;
-    uint8_t is_high; // 0:LIFCR, 1: HIFCR
+    uint8_t is_high; // 1 or 0
 } DMA_FlagMap_t;
 
+/*
+    LISR
+    bit 0 : Stream 0 all flags
+    bit 6 : Stream 1 all flags
+    bit 16 : Stream 2 all flags
+    bit 22 : Stream 3 all flags
+    
+    HISR
+    bit 0 : Stream 4 all flags
+    bit 6 : Stream 5 all flags
+    bit 16 : Stream 6 all flags
+    bit 22 : Stream 7 all flags
+*/
 static const DMA_FlagMap_t dma_flag_map[8] =
 {
     {0, 0},  // Stream0
@@ -322,7 +335,22 @@ typedef struct
     DMA_PBurst_t PerBurst;
 }DMA_Config_t;
 
-typedef struct
+/*
+    ISR functions
+*/
+typedef enum
+{
+    DMA_EVENT_TC, //transfer complete
+    DMA_EVENT_HTC, //half transfer complete 
+    DMA_EVENT_TE, //transfer error
+    DMA_EVENT_FE  //fifo error
+}DMA_Event_t;
+
+struct DMA_Handle_s; 
+
+typedef void (*DMA_Callback_fn)(struct DMA_Handle_s *pHandler, DMA_Event_t event);
+
+typedef struct DMA_Handle_s
 {
   DMA_Reg_t *pDMAx;
   DMA_Channel_t channel;
@@ -332,6 +360,7 @@ typedef struct
   uint32_t length;
   DMA_Config_t config;
   volatile DMA_State_t state;
+  DMA_Callback_fn pCallback;
 } DMA_Handle_t;
 
 void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi);

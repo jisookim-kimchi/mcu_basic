@@ -55,6 +55,7 @@ typedef struct
 } GPIO_PinConfig_t;
 /*
  * Handler for a GPIO pin
+ * TODO : add ISR function pointer
  */
 typedef struct
 {
