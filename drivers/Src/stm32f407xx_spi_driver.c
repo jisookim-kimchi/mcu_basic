@@ -387,6 +387,14 @@ static void SPI_DMX_RX_Enable(SPI_Reg_t *pSPIx)
     pSPIx->CR2 |= (1 << SPI_CR2_RXDMAEN);
 }
 
+static void SPI_DMA_TxComplete(DMA_Handle_t *pDMAHandler, DMA_Event_t event)
+{
+    if (event == DMA_EVENT_TC)
+    {
+        // SPI->READY
+    }
+}
+
 SPI_Status_t SPI_DMA_TX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
 {
     if (!pSPIHandler || !txBuf || len == 0)
