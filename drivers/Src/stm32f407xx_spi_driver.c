@@ -25,6 +25,16 @@ void SPI_ErrorCallback(SPI_Handle_t *pSPIHandler)
     SPI_SetState(pSPIHandler, SPI_STATE_ERROR);
 }
 
+void SPI_TxHalfCompleteCallback(SPI_Handle_t *pSPIHandler)
+{
+    ;//pingpong buffer
+}
+
+void SPI_RxHalfCompleteCallback(SPI_Handle_t *pSPIHandler)
+{
+    ;//pingpong buffer
+}
+
 /*
     @Brief: Enable or disable the peripheral clock for a given SPI peripheral
     @Param 1: SPI Register Base Address pointer
@@ -387,11 +397,47 @@ static void SPI_DMX_RX_Enable(SPI_Reg_t *pSPIx)
     pSPIx->CR2 |= (1 << SPI_CR2_RXDMAEN);
 }
 
-static void SPI_DMA_TxComplete(DMA_Handle_t *pDMAHandler, DMA_Event_t event)
+static void SPI_DMA_TxCallback(DMA_Handle_t *pDMAHandler, DMA_Event_t event)
 {
-    if (event == DMA_EVENT_TC)
+    SPI_Handle_t *pSPIHandler = (SPI_Handle_t*)pDMAHandler->pParent;
+    if (!pSPIHandler)
+        return;
+    switch (event)
     {
-        // SPI->READY
+        case DMA_EVENT_TC:
+            SPI_TxCompleteCallback(pSPIHandler);
+            break;
+        case DMA_EVENT_HTC:
+            SPI_TxHalfCompleteCallback(pSPIHandler);
+            break;
+        case DMA_EVENT_FE:
+        case DMA_EVENT_TE:
+            SPI_ErrorCallback(pSPIHandler);
+            break;
+        default:
+            break;
+    }
+}
+
+static void SPI_DMA_RxCallback(DMA_Handle_t *pDMAHandler, DMA_Event_t event)
+{
+    SPI_Handle_t *pSPIHandler = (SPI_Handle_t*)pDMAHandler->pParent;
+    if (!pSPIHandler)
+        return;
+    switch (event)
+    {
+        case DMA_EVENT_TC:
+            SPI_RxCompleteCallback(pSPIHandler);
+            break;
+        case DMA_EVENT_HTC:
+            SPI_RxHalfCompleteCallback(pSPIHandler);
+            break;
+        case DMA_EVENT_FE:
+        case DMA_EVENT_TE:
+            SPI_ErrorCallback(pSPIHandler);
+            break;
+        default:
+            break;
     }
 }
 
@@ -411,6 +457,9 @@ SPI_Status_t SPI_DMA_TX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
     dmx->mem        = (uintptr_t)txBuf;
     dmx->length     = len;
     dmx->peripheral = (uintptr_t)&pSPIHandler->pSPIx->DR;
+    dmx->pParent    = (void*)pSPIHandler;
+    DMA_loadCallback(dmx, SPI_DMA_TxCallback);
+
     SPI_SetState(pSPIHandler, SPI_STATE_BUSY_TX);
     
     if (DMA_Init(dmx) != DMA_OK)
@@ -430,9 +479,9 @@ SPI_Status_t SPI_DMA_TX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
     return SPI_OK;
 }
 
-SPI_Status_t SPI_DMA_RX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
+SPI_Status_t SPI_DMA_RX(SPI_Handle_t *pSPIHandler, uint8_t *pRxBuffer, uint32_t len)
 {
-    if (!pSPIHandler || !txBuf || len == 0)
+    if (!pSPIHandler || !pRxBuffer || len == 0)
         return SPI_ERROR;
 
     if (pSPIHandler->SPI_State != SPI_STATE_READY)
@@ -443,9 +492,12 @@ SPI_Status_t SPI_DMA_RX(SPI_Handle_t *pSPIHandler, uint8_t *txBuf, uint32_t len)
     if (!dmx)
         return SPI_ERROR;
 
-    dmx->mem        = (uintptr_t)txBuf;
+    dmx->mem        = (uintptr_t)pRxBuffer;
     dmx->length     = len;
     dmx->peripheral = (uintptr_t)&pSPIHandler->pSPIx->DR;
+    dmx->pParent    = (void*)pSPIHandler;
+    DMA_loadCallback(dmx, SPI_DMA_RxCallback);
+    
     SPI_SetState(pSPIHandler, SPI_STATE_BUSY_RX);
     
     if (DMA_Init(dmx) != DMA_OK)

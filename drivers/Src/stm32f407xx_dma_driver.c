@@ -380,6 +380,7 @@ int32_t DMA_DeInit(DMA_Handle_t *handler)
     handler->mem = 0;
     handler->length = 0;
     handler->state = DMA_STATE_RESET;
+    handler->pParent = NULL;
     return DMA_OK;
 }
 

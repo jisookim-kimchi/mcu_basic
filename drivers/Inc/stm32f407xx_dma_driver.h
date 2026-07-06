@@ -361,9 +361,11 @@ typedef struct DMA_Handle_s
   DMA_Config_t config;
   volatile DMA_State_t state;
   DMA_Callback_fn pCallback;
+  void* pParent;
 } DMA_Handle_t;
 
 void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi);
+void DMA_loadCallback(DMA_Handle_t *pDMAHandler, DMA_Callback_fn pCallback);
 int32_t DMA_Init(DMA_Handle_t *pDMAHandler);
 int32_t DMA_Start(DMA_Handle_t *handler);
 int32_t DMA_DeInit(DMA_Handle_t *pDMAHandler);
