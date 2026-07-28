@@ -1,50 +1,46 @@
 # CMake minimum version
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 
-# Project name and languages
-project(Mcu_basic LANGUAGES C CXX ASM)
-
-# Specify the compiler toolchain for ARM Cortex-M4 (STM32F4)
+# Specify the Target system(bare-metal MCU)
 set(CMAKE_SYSTEM_NAME Generic)
+
+# Specify the target CPU architecture
 set(CMAKE_SYSTEM_PROCESSOR arm)
+
+# Prevent CMake from trying to build and run executable test programs
+# during compiler checks
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-# Path to the ARM GCC toolchain (adjust if needed)
-# You can set this via environment variable or directly here
-# set(CMAKE_C_COMPILER "arm-none-eabi-gcc")
-# set(CMAKE_CXX_COMPILER "arm-none-eabi-g++")
-# set(CMAKE_ASM_COMPILER "arm-none-eabi-gcc")
+#Specify C ,C++, Assembly Compiler for ARM Cortex-M target
+set(CMAKE_C_COMPILER "arm-none-eabi-gcc")
+set(CMAKE_CXX_COMPILER "arm-none-eabi-g++")
+set(CMAKE_ASM_COMPILER "arm-none-eabi-gcc")
+set(CMAKE_SIZE "arm-none-eabi-size")
 
-# Enable debugging and optimization flags for MCU
-set(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -Wall -Wextra -ffunction-sections -fdata-sections")
-set(DEBUG_FLAGS "-g -Og")
-set(RELEASE_FLAGS "-O2")
+# Project name and languages
+project(MCU_BASIC_STM32F4XX LANGUAGES C CXX ASM)
 
-# Choose build type (Debug or Release). Default to Debug.
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_C_FLAGS "${COMMON_FLAGS} ${DEBUG_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} ${DEBUG_FLAGS}")
-else()
-    set(CMAKE_C_FLAGS "${COMMON_FLAGS} ${RELEASE_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} ${RELEASE_FLAGS}")
-endif()
-
-# Linker flags
-set(LINKER_FLAGS "-T${CMAKE_SOURCE_DIR}/STM32F407VGTX_FLASH.ld -Wl,--gc-sections -Wl,-Map=${PROJECT_NAME}.map")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS}")
-
-# Include directories
-include_directories(
-    ${CMAKE_SOURCE_DIR}/Src
-    ${CMAKE_SOURCE_DIR}/drivers
-    ${CMAKE_SOURCE_DIR}/Startup
+# Specify optimization and warning flags for MCU
+# -Og : Optimize for debugging
+# -O2 : Optimize for minimal code size
+set(COMMON_FLAGS
+    -mcpu=cortex-m4
+    -mthumb
+    -Wall
+    -Wextra
+    -Werror
+    -ffunction-sections
+    -fdata-sections
+)
+set(DEBUG_FLAGS
+    -g
+    -Og
+)
+set(RELEASE_FLAGS
+    -O2
 )
 
-# Source files
+# Source files push?
 file(GLOB_RECURSE SOURCES
     "${CMAKE_SOURCE_DIR}/Src/*.c"
     "${CMAKE_SOURCE_DIR}/Src/*.cpp"
@@ -53,17 +49,75 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_SOURCE_DIR}/Startup/*.s"
 )
 
-add_executable(${PROJECT_NAME}.elf ${SOURCES})
+#generate target
+add_executable(
+    ${PROJECT_NAME}
+    ${SOURCES}
+)
 
+# Include directories push to Target
+target_include_directories(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/Src
+    ${CMAKE_SOURCE_DIR}/drivers
+    ${CMAKE_SOURCE_DIR}/Startup
+)
+
+# Add compile options
+# Apply common flags and build-type-specific flags
+# Debug: -g -Og
+# Release: -O2
+target_compile_options(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${COMMON_FLAGS}
+    $<$<CONFIG:Debug>:${DEBUG_FLAGS}>
+    $<$<CONFIG:Release>:${RELEASE_FLAGS}>
+)
+
+# Add linker options
+# Linker flags
+# --gc-sections : Discard unused sections
+# -WL: Pass option to linker
+# CMAKE_SOURCE_DIR : Root directory of the project
+# PROJECT_NAME : Mcu_basic LANGUAGES C CXX ASM
+set(LINKER_FLAGS
+    -T${CMAKE_SOURCE_DIR}/STM32F407VGTX_FLASH.ld
+    -Wl,--gc-sections
+    -Wl,-Map=${PROJECT_NAME}.map
+)
+
+target_link_options(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${LINKER_FLAGS}
+)
+
+# add tasks after build executed
 # Post-build actions: generate binary and hex files
-add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.bin
-    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.hex
-    COMMENT "Generating .bin and .hex files"
+add_custom_command(
+    TARGET ${PROJECT_NAME}
+    POST_BUILD
+
+    COMMAND ${CMAKE_OBJCOPY}
+        -O binary
+        $<TARGET_FILE:${PROJECT_NAME}>
+        ${PROJECT_NAME}.bin
+
+    COMMAND ${CMAKE_OBJCOPY}
+        -O ihex
+        $<TARGET_FILE:${PROJECT_NAME}>
+        ${PROJECT_NAME}.hex
+
+    COMMENT "made .bin and .hex files"
 )
 
 # Size information after build
-add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
-    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${PROJECT_NAME}.elf>
-    COMMENT "Printing size information"
+add_custom_command(
+    TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_SIZE}
+    $<TARGET_FILE:${PROJECT_NAME}>
+    COMMENT "size information"
 )

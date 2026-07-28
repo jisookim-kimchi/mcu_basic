@@ -1,5 +1,5 @@
 #include "../Inc/stm32f407xx_dma_driver.h"
-
+#include <stddef.h>
 /*
     DMA Clock Enable Disable
     @param1 : DMA base address
@@ -34,12 +34,14 @@ void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi)
 /*
     DMA MAP init 
 */
-static int32_t DMA_mapRequest(DMA_Handle_t *pDMAHandler, DMA_Request_t req)
+static int32_t DMA_resolveRequest(DMA_Handle_t *pDMAHandler, DMA_Request_t req)
 {
     if (pDMAHandler == NULL) return -DMA_CONFIG_INVALID_PARAM;
     if (req >= DMA_REQ_TABLE_MAX) return -DMA_CONFIG_INVALID_REQUEST;
     
     const DMA_Map_t *map = &dma_map[req];
+    if (map->pDMAx == NULL)
+        return -DMA_CONFIG_INVALID_REQUEST;
 
     pDMAHandler->streamNum = map->stream;
     pDMAHandler->channel = map->channel;
@@ -298,6 +300,8 @@ int32_t DMA_Init(DMA_Handle_t *pDMAHandler)
 {
     if (pDMAHandler == NULL)
         return DMA_CONFIG_INVALID_PARAM;
+    if (DMA_resolveRequest(pDMAHandler, pDMAHandler->req) != DMA_OK)
+        return DMA_NG;
     if (DMA_waitDisable(pDMAHandler) != DMA_OK)
         return DMA_NG;
     if (DMA_clearFlags(pDMAHandler) != DMA_OK)

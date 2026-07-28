@@ -25,14 +25,17 @@ void SPI_ErrorCallback(SPI_Handle_t *pSPIHandler)
     SPI_SetState(pSPIHandler, SPI_STATE_ERROR);
 }
 
+//pingpong
+__attribute__((weak)) 
 void SPI_TxHalfCompleteCallback(SPI_Handle_t *pSPIHandler)
 {
-    ;//pingpong buffer
+    (void)pSPIHandler;
 }
 
+__attribute__((weak)) 
 void SPI_RxHalfCompleteCallback(SPI_Handle_t *pSPIHandler)
 {
-    ;//pingpong buffer
+    (void)pSPIHandler;
 }
 
 /*

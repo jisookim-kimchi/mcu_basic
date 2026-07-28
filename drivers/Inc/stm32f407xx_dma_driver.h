@@ -352,16 +352,17 @@ typedef void (*DMA_Callback_fn)(struct DMA_Handle_s *pHandler, DMA_Event_t event
 
 typedef struct DMA_Handle_s
 {
-  DMA_Reg_t *pDMAx;
-  DMA_Channel_t channel;
-  uint8_t streamNum;
-  uintptr_t peripheral; //peirpheral addr.
-  uintptr_t mem;        // mem addr.
-  uint32_t length;
-  DMA_Config_t config;
-  volatile DMA_State_t state;
-  DMA_Callback_fn pCallback;
-  void* pParent;
+    DMA_Request_t req;
+    DMA_Reg_t *pDMAx;
+    DMA_Channel_t channel;
+    uint8_t streamNum;
+    uintptr_t peripheral; //peirpheral addr.
+    uintptr_t mem;        // mem addr.
+    uint32_t length;
+    DMA_Config_t config;
+    volatile DMA_State_t state;
+    DMA_Callback_fn pCallback;
+    void* pParent;
 } DMA_Handle_t;
 
 void DMA_PeriClockControl(DMA_Reg_t *pDMAx, uint8_t EnOrDi);
