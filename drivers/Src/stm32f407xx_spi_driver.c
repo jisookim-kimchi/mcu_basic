@@ -25,13 +25,14 @@ void SPI_ErrorCallback(SPI_Handle_t *pSPIHandler)
     SPI_SetState(pSPIHandler, SPI_STATE_ERROR);
 }
 
-//pingpong
+//TODO implement this function in the caller
 __attribute__((weak)) 
 void SPI_TxHalfCompleteCallback(SPI_Handle_t *pSPIHandler)
 {
     (void)pSPIHandler;
 }
 
+//TODO implement this function in the caller
 __attribute__((weak)) 
 void SPI_RxHalfCompleteCallback(SPI_Handle_t *pSPIHandler)
 {

@@ -82,6 +82,7 @@ target_compile_options(
 # -WL: Pass option to linker
 # CMAKE_SOURCE_DIR : Root directory of the project
 # PROJECT_NAME : Mcu_basic LANGUAGES C CXX ASM
+# -T : linker script transfer to linker
 set(LINKER_FLAGS
     -T${CMAKE_SOURCE_DIR}/STM32F407VGTX_FLASH.ld
     -Wl,--gc-sections

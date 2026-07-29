@@ -293,30 +293,30 @@ static const DMA_Map_t dma_map[DMA_REQ_TABLE_MAX] =
 {
     [DMA_REQ_SPI1_RX] =
     {
-        DMA2,
-        DMA_STREAM0,
-        DMA_CH3
+        .pDMAx=DMA2,
+        .stream=DMA_STREAM0,
+        .channel=DMA_CH3
     },
 
     [DMA_REQ_SPI1_TX] =
     {
-        DMA2,
-        DMA_STREAM3,
-        DMA_CH3
+        .pDMAx=DMA2,
+        .stream=DMA_STREAM3,
+        .channel=DMA_CH3
     },
 
     [DMA_REQ_USART1_RX] =
     {
-        DMA2,
-        DMA_STREAM5,
-        DMA_CH4
+        .pDMAx=DMA2,
+        .stream=DMA_STREAM5,
+        .channel=DMA_CH4
     },
 
     [DMA_REQ_USART1_TX] =
     {
-        DMA2,
-        DMA_STREAM7,
-        DMA_CH4
+        .pDMAx=DMA2,
+        .stream=DMA_STREAM7,
+        .channel=DMA_CH4
     },
 };
 
