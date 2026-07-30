@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GDB connect and excute
+# GDB connect and execute
 
 ELF_FILE="build/MCU_BASIC_STM32F4XX"
 
@@ -9,7 +9,10 @@ if [ ! -f "$ELF_FILE" ]; then
     exit 1
 fi
 
-echo " GDB Debugger for $ELF_FILE..."
-echo " Connect to OpenOCD at localhost:3333..."
+HOST_IP=$(ip route show default | awk '{print $3}')
+if [ -z "$HOST_IP" ]; then
+    HOST_IP="localhost"
+fi
 
-gdb-multiarch -x openocd.gdb "$ELF_FILE"
+gdb-multiarch -ex "target extended-remote $HOST_IP:3333" -x openocd.gdb "$ELF_FILE"
+

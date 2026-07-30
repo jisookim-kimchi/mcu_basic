@@ -26,6 +26,8 @@ project(MCU_BASIC_STM32F4XX LANGUAGES C CXX ASM)
 set(COMMON_FLAGS
     -mcpu=cortex-m4
     -mthumb
+    --specs=nano.specs
+    --specs=nosys.specs
     -Wall
     -Wextra
     -Werror
@@ -85,6 +87,8 @@ target_compile_options(
 # -T : linker script transfer to linker
 set(LINKER_FLAGS
     -T${CMAKE_SOURCE_DIR}/STM32F407VGTX_FLASH.ld
+    --specs=nano.specs
+    --specs=nosys.specs
     -Wl,--gc-sections
     -Wl,-Map=${PROJECT_NAME}.map
 )
